@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CEDE Budget Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars for high-density tables */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Toast Notification Container -->
+  <div id="toastNotification" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-100px] opacity-0 pointer-events-none">
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 text-white shadow-xl text-xs font-medium border border-slate-700">
+      <span id="toastIcon">✓</span>
+      <span id="toastMessage">Operation successful</span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-brand-700 flex items-center justify-center text-white font-bold text-sm shadow-sm ring-2 ring-brand-100">
+          CEDE
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">CEDE Budget & Contract Management</h1>
+          <p class="text-[11px] text-slate-500 font-medium">Tracking Multi-IPC Payments, Multi-VO Variations, and Chief Engineer Progress</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <button onclick="openSyncModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 active:scale-[0.98] transition shadow-2xs">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Google Sheet Sync
+        </button>
+        <button onclick="exportToCSV()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 active:scale-[0.98] transition shadow-2xs">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export CSV
+        </button>
+        <button onclick="openModal()" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-brand-700 rounded-lg hover:bg-brand-800 active:scale-[0.98] shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Contract
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- KPI Summary Statistics -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Contracts</p>
+        <p id="kpiTotalCount" class="text-2xl font-bold text-slate-900 mt-1">0</p>
+        <p class="text-[11px] text-slate-400 mt-0.5" id="kpiEngineerDistribution">Rasika: 0 • Oshani: 0</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Contract Sum</p>
+        <p id="kpiTotalSum" class="text-2xl font-bold text-brand-900 mt-1">Rs. 0.00</p>
+        <p class="text-[11px] text-slate-400 mt-0.5">Cumulative awarded sum</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Disbursed</p>
+        <p id="kpiTotalDisbursed" class="text-2xl font-bold text-emerald-600 mt-1">Rs. 0.00</p>
+        <p class="text-[11px] text-emerald-600 font-medium mt-0.5" id="kpiDisbursedBreakdown">Adv + All IPCs</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs">
+        <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Variations (VO)</p>
+        <p id="kpiTotalVO" class="text-2xl font-bold text-purple-700 mt-1">Rs. 0.00</p>
+        <p class="text-[11px] text-purple-600 font-medium mt-0.5" id="kpiVOCount">Approved VOs</p>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs col-span-2 sm:col-span-1">
+        <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Pending Issues</p>
+        <p id="kpiPendingIssues" class="text-2xl font-bold text-amber-600 mt-1">0</p>
+        <p class="text-[11px] text-amber-600 font-medium mt-0.5">Attention required</p>
+      </div>
+    </section>
+
+    <!-- Filter & Search Toolbar with Chief Engineer Dropdown -->
+    <section class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="relative w-full md:w-80">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        <input type="text" id="filterSearch" oninput="renderTable()" placeholder="Search contract, IPC no, VO, description..." class="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-slate-800 placeholder-slate-400 transition" />
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <div class="flex items-center gap-1.5">
+          <label for="filterEngineer" class="text-xs font-semibold text-slate-600 whitespace-nowrap">Chief Eng:</label>
+          <select id="filterEngineer" onchange="renderTable()" class="py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="">All Engineers</option>
+            <option value="Eng. Rasika">Eng. Rasika</option>
+            <option value="Eng. Oshani">Eng. Oshani</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <label for="filterVONature" class="text-xs font-semibold text-slate-600 whitespace-nowrap">VO Nature:</label>
+          <select id="filterVONature" onchange="renderTable()" class="py-1.5 px-2.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="">All VO Types</option>
+            <option value="Work">Work</option>
+            <option value="Omission">Omission</option>
+            <option value="SSR">SSR</option>
+            <option value="Addl. Work">Addl. Work</option>
+          </select>
+        </div>
+
+        <button onclick="resetFilters()" class="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 underline whitespace-nowrap">Reset</button>
+      </div>
+    </section>
+
+    <!-- Data Table Container matching Google Sheet layout -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <!-- Level 1 Super Headers -->
+            <tr class="bg-slate-100/90 border-b border-slate-200 text-slate-600 font-semibold text-[11px] uppercase tracking-wider text-center">
+              <th colspan="6" class="py-2.5 px-3 border-r border-slate-200">Contract Particulars</th>
+              <th colspan="2" class="py-2.5 px-3 border-r border-slate-200 bg-blue-50/80 text-brand-900">Current Payment Stage</th>
+              <th colspan="4" class="py-2.5 px-3 border-r border-slate-200 bg-purple-50/80 text-purple-900">Variation (VO)</th>
+              <th rowspan="2" class="py-2.5 px-3 border-r border-slate-200 align-middle text-amber-900 bg-amber-50/60 font-semibold min-w-[180px]">Issues Need to Attend</th>
+              <th rowspan="2" class="py-2.5 px-3 align-middle text-center w-24">Actions</th>
+            </tr>
+            <!-- Level 2 Sub-Headers -->
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-semibold whitespace-nowrap text-[11px]">
+              <th class="py-2 px-3 border-r border-slate-200">Contract Number</th>
+              <th class="py-2 px-3 border-r border-slate-200 min-w-[120px]">Chief Engineer</th>
+              <th class="py-2 px-3 border-r border-slate-200 min-w-[200px]">Description</th>
+              <th class="py-2 px-3 border-r border-slate-200 text-right">Contract Sum</th>
+              <th class="py-2 px-3 border-r border-slate-200 text-right">P. Sum Amount</th>
+              <th class="py-2 px-3 border-r border-slate-200 text-right">Contingencies</th>
+              <th class="py-2 px-3 border-r border-slate-200 text-right bg-blue-50/40 min-w-[125px]">Advance Payment</th>
+              <th class="py-2 px-3 border-r border-slate-200 bg-blue-50/40 min-w-[220px]">Multiple IPC Payments</th>
+              <th class="py-2 px-3 border-r border-slate-200 bg-purple-50/40">VO No.</th>
+              <th class="py-2 px-3 border-r border-slate-200 bg-purple-50/40">VO Nature</th>
+              <th class="py-2 px-3 border-r border-slate-200 text-right bg-purple-50/40">VO Amount</th>
+              <th class="py-2 px-3 border-r border-slate-200 bg-purple-50/40 min-w-[160px]">VO Description</th>
+            </tr>
+          </thead>
+          <tbody id="contractsTableBody" class="divide-y divide-slate-200 text-slate-800">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden py-14 text-center">
+        <svg class="mx-auto h-10 w-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <p class="mt-2 text-sm font-semibold text-slate-700">No matching contracts found</p>
+        <p class="text-xs text-slate-400 mt-0.5">Try adjusting your filters or click "+ Add Contract" to create one.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add/Edit Contract Modal -->
+  <div id="contractModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div>
+          <h2 id="modalTitle" class="text-base font-bold text-slate-900">Add New Contract Entry</h2>
+          <p class="text-xs text-slate-500">Configure particulars, multiple IPC payments, and variation orders</p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="contractForm" onsubmit="handleFormSubmit(event)" class="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        <input type="hidden" id="editIndex" value="-1" />
+
+        <!-- 1. Contract Particulars -->
+        <div>
+          <h3 class="text-xs font-semibold text-brand-800 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-brand-600"></span> 1. Contract Particulars
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Number *</label>
+              <input type="text" id="modalContractNo" required placeholder="e.g. CEDE/M&E/2026/01" class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Chief Engineer in Charge *</label>
+              <select id="modalEngineer" required class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white font-medium">
+                <option value="Eng. Rasika">Eng. Rasika</option>
+                <option value="Eng. Oshani">Eng. Oshani</option>
+              </select>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Description *</label>
+              <input type="text" id="modalContractDesc" required placeholder="e.g. Supply & Installation of High-Lift Pumps at WTP" class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Sum (LKR) *</label>
+              <input type="number" step="0.01" id="modalContractSum" required placeholder="0.00" class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">P. Sum Amount (LKR)</label>
+              <input type="number" step="0.01" id="modalPSum" placeholder="0.00" class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Contingencies Amount (LKR)</label>
+              <input type="number" step="0.01" id="modalContingencies" placeholder="0.00" class="w-full text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Current Payment Stage (Multiple IPCs + Advance Payment) -->
+        <div class="border-t border-slate-200 pt-5">
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="text-xs font-semibold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span> 2. Current Payment Stage (Advance & Multiple IPCs)
+            </h3>
+            <div class="text-[11px] text-slate-500">
+              Total Disbursed: <span id="modalDisbursedTotalSum" class="font-bold text-emerald-700">Rs. 0.00</span>
+            </div>
+          </div>
+
+          <div class="bg-blue-50/40 p-3.5 rounded-xl border border-blue-200/80 mb-3.5">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Advance Payment Amount (LKR)</label>
+            <input type="number" step="0.01" id="modalAdvancePayment" oninput="recalculateModalPaymentTotals()" placeholder="0.00" class="w-full sm:w-1/2 text-xs rounded-lg border border-slate-300 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white" />
+            <p class="text-[10px] text-slate-500 mt-1">Disbursed mobilization or initial advance amount.</p>
+          </div>
+
+          <!-- Dynamic IPC List -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-700">Interim Payment Certificates (IPCs):</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-500">Total IPCs: <strong id="modalIPCTotalSum" class="text-blue-900 font-bold">Rs. 0.00</strong></span>
+                <button type="button" onclick="addIPCRow()" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  + Add IPC Bill
+                </button>
+              </div>
+            </div>
+
+            <div id="ipcContainer" class="space-y-2.5">
+              <!-- Dynamically populated IPC cards -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Variation Orders (VO) -->
+        <div class="border-t border-slate-200 pt-5">
+          <div class="flex items-center justify-between mb-2.5">
+            <h3 class="text-xs font-semibold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-600"></span> 3. Variation Orders (VO)
+            </h3>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-slate-500">Net VO Sum: <strong id="modalVOTotalSum" class="text-purple-900 font-bold">Rs. 0.00</strong></span>
+              <button type="button" onclick="addVORow()" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-md transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                + Add VO
+              </button>
+            </div>
+          </div>
+
+          <div id="voContainer" class="space-y-2.5">
+            <!-- Dynamically populated VO cards -->
+          </div>
+        </div>
+
+        <!-- 4. Issues Need to Attend -->
+        <div class="border-t border-slate-200 pt-5">
+          <h3 class="text-xs font-semibold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-600"></span> 4. Issues Need to Attend & Action Items
+          </h3>
+          <textarea id="modalIssues" rows="2" placeholder="e.g. Awaiting bill submission certification, site queries, approval from AGM office..." class="w-full text-xs rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-amber-500 focus:outline-none"></textarea>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="border-t border-slate-200 pt-4 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold text-white bg-brand-700 rounded-lg hover:bg-brand-800 transition shadow-sm">Save Contract Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Delete Confirmation Modal (NO native confirm dialogs) -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5 border border-slate-200">
+      <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+      </div>
+      <h3 class="text-sm font-bold text-slate-900">Delete Contract Record?</h3>
+      <p id="deleteConfirmText" class="text-xs text-slate-500 mt-1">This will permanently remove this contract and all its associated IPC bills and variation orders.</p>
+      <div class="mt-4 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeDeleteModal()" class="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Apps Script Sync Modal -->
+  <div id="syncModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Google Sheet Live Sync</h2>
+            <p class="text-xs text-slate-500">Synchronize your CEDE Google Sheet with Multi-IPC & Multi-VO support</p>
+          </div>
+        </div>
+        <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Google Apps Script Web App URL</label>
+          <input type="url" id="appScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full text-xs rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+          <p class="text-[11px] text-slate-500 mt-1">Deploy your Apps Script as a Web App (access set to <em>"Anyone"</em>) and paste the URL here.</p>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button type="button" onclick="syncWithAppsScript('pull')" id="btnPull" class="flex-1 inline-flex justify-center items-center gap-1.5 px-4 py-2 font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Pull Data From Sheet
+          </button>
+          <button type="button" onclick="syncWithAppsScript('push')" id="btnPush" class="flex-1 inline-flex justify-center items-center gap-1.5 px-4 py-2 font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-lg hover:bg-emerald-100 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            Push Dashboard to Sheet
+          </button>
+        </div>
+
+        <div id="syncStatusBox" class="hidden p-3 rounded-lg border text-xs"></div>
+
+        <div class="border-t border-slate-200 pt-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Updated Apps Script for Multi-IPC & Multi-VO (Code.gs)</span>
+            <button onclick="copyAppsScriptCode()" class="text-brand-700 hover:text-brand-900 font-semibold underline text-[11px]">Copy Code</button>
+          </div>
+          <pre id="appsScriptCodeBlock" class="p-3 bg-slate-900 text-slate-100 rounded-lg text-[10px] font-mono overflow-x-auto max-h-48 leading-relaxed">
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", data: data }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
+  var payload = JSON.parse(e.postData.contents);
+  var contracts = payload.contracts || [];
+  
+  // Clear existing data rows (keep first 2 header rows)
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 2) {
+    sheet.getRange(3, 1, lastRow - 2, 14).clearContent();
+  }
+  
+  var rows = [];
+  contracts.forEach(function(c) {
+    var vos = (c.variations && c.variations.length > 0) ? c.variations : [{voNo:'', voNature:'', voAmount:0, voDesc:''}];
+    var ipcs = (c.ipcs && c.ipcs.length > 0) ? c.ipcs : [{ipcNo:'', ipcAmount:0, ipcRemarks:''}];
+    
+    // Determine maximum iterations between IPC and VO rows
+    var maxRows = Math.max(vos.length, ipcs.length);
+    for (var i = 0; i < maxRows; i++) {
+      var vo = vos[i] || {voNo:'', voNature:'', voAmount:0, voDesc:''};
+      var ipc = ipcs[i] || {ipcNo:'', ipcAmount:0, ipcRemarks:''};
+      
+      rows.push([
+        c.contractNo || '',
+        c.engineer || '',
+        c.description || '',
+        c.contractSum || 0,
+        c.pSum || 0,
+        c.contingencies || 0,
+        c.advancePayment || 0,
+        ipc.ipcNo ? (ipc.ipcNo + ': ' + (ipc.ipcAmount || 0) + (ipc.ipcRemarks ? ' (' + ipc.ipcRemarks + ')' : '')) : (ipc.ipcAmount || 0),
+        vo.voNo || '',
+        vo.voNature || '',
+        vo.voAmount || 0,
+        vo.voDesc || '',
+        c.issues || ''
+      ]);
+    }
+  });
+  
+  if (rows.length > 0) {
+    sheet.getRange(3, 1, rows.length, 13).setValues(rows);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", count: rows.length }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+          </pre>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end">
+        <button type="button" onclick="closeSyncModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'cede_budget_contracts_v4';
+    const APPS_SCRIPT_URL_KEY = 'cede_apps_script_url';
+    const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw51Xz7F_9v9aTHTIzidFYJIxGWa5lfvHNk-fRDKwW6tCl5XSii_CCU8IigRfg6TFU7/exec';
+
+    // Seed data with Chief Engineers, Multiple IPCs, and Multiple VOs
+    const defaultData = [
+      {
+        contractNo: "CEDE/M&E/2026/01",
+        engineer: "Eng. Rasika",
+        description: "Supply & Installation of High-Lift Pumps at WTP",
+        contractSum: 15400000,
+        pSum: 500000,
+        contingencies: 750000,
+        advancePayment: 3080000,
+        ipcs: [
+          { ipcNo: "IPC-01", ipcAmount: 2500000, ipcRemarks: "Pump delivery & base plate casting" },
+          { ipcNo: "IPC-02", ipcAmount: 2000000, ipcRemarks: "Mechanical assembly & alignment" }
+        ],
+        variations: [
+          { voNo: "VO-01", voNature: "Addl. Work", voAmount: 420000, voDesc: "Extra pipe connection accessories and valves" },
+          { voNo: "VO-02", voNature: "Work", voAmount: 210000, voDesc: "Inlet manifold reconfiguration" }
+        ],
+        issues: "Awaiting approval for bill submission from AGM office"
+      },
+      {
+        contractNo: "CEDE/M&E/2026/02",
+        engineer: "Eng. Oshani",
+        description: "Electromechanical Automation & Chlorination System Upgrade",
+        contractSum: 8200000,
+        pSum: 300000,
+        contingencies: 400000,
+        advancePayment: 1640000,
+        ipcs: [
+          { ipcNo: "IPC-01", ipcAmount: 1100000, ipcRemarks: "Chlorine dosing pumps & skids delivered" },
+          { ipcNo: "IPC-02", ipcAmount: 1000000, ipcRemarks: "Control panel wiring & PLC installation" }
+        ],
+        variations: [
+          { voNo: "VO-01", voNature: "SSR", voAmount: 180000, voDesc: "Site specific rate revision for dosing lines" },
+          { voNo: "VO-02", voNature: "Omission", voAmount: -65000, voDesc: "Omission of redundant bypass valve assemble" }
+        ],
+        issues: "Pending IPC-02 invoice certification"
+      }
+    ];
+
+    // Load initial state with schema migration (supports previous v1, v2, v3 keys)
+    let contracts = [];
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) || 
+                     localStorage.getItem('cede_budget_contracts_v3') || 
+                     localStorage.getItem('cede_budget_contracts_v2') || 
+                     localStorage.getItem('cede_budget_contracts_v1');
+      if (stored) {
+        contracts = JSON.parse(stored).map(item => {
+          if (!item.engineer) item.engineer = "Eng. Rasika";
+          
+          // Migrate variations
+          if (!item.variations) {
+            item.variations = [];
+            if (item.voNo || item.voAmount) {
+              item.variations.push({
+                voNo: item.voNo || '',
+                voNature: item.voNature || '',
+                voAmount: Number(item.voAmount) || 0,
+                voDesc: item.voDesc || ''
+              });
+            }
+          }
+
+          // Migrate multiple IPCs
+          if (!item.ipcs) {
+            item.ipcs = [];
+            if (item.ipcAmount || item.ipcAmounts) {
+              const prevAmt = Number(item.ipcAmount || item.ipcAmounts) || 0;
+              if (prevAmt > 0) {
+                item.ipcs.push({
+                  ipcNo: "IPC-01",
+                  ipcAmount: prevAmt,
+                  ipcRemarks: "Initial Certified IPC"
+                });
+              }
+            }
+          }
+          return item;
+        });
+      } else {
+        contracts = defaultData;
+      }
+    } catch (e) {
+      contracts = defaultData;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(contracts));
+      } catch (e) {
+        console.error("Failed saving to localStorage", e);
+      }
+    }
+
+    // Currency Formatter
+    function fmtLKR(val) {
+      if (val === undefined || val === null || val === "" || isNaN(val)) return "-";
+      return "Rs. " + Number(val).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // UI Toast Message instead of alert()
+    function showToast(msg, icon = '✓') {
+      const toast = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').innerText = msg;
+      document.getElementById('toastIcon').innerText = icon;
+      toast.classList.remove('opacity-0', 'translate-y-[-100px]', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-[-100px]', 'pointer-events-none');
+      }, 3500);
+    }
+
+    function calculateContractIPCSum(item) {
+      if (!Array.isArray(item.ipcs)) return 0;
+      return item.ipcs.reduce((sum, ipc) => sum + (parseFloat(ipc.ipcAmount) || 0), 0);
+    }
+
+    function calculateContractVOSum(item) {
+      if (!Array.isArray(item.variations)) return 0;
+      return item.variations.reduce((sum, vo) => sum + (parseFloat(vo.voAmount) || 0), 0);
+    }
+
+    function updateKPIs() {
+      const totalCount = contracts.length;
+      let totalSum = 0;
+      let totalDisbursed = 0;
+      let totalVO = 0;
+      let totalVOCount = 0;
+      let totalIPCCount = 0;
+      let pendingIssues = 0;
+      let rasikaCount = 0;
+      let oshaniCount = 0;
+
+      contracts.forEach(item => {
+        totalSum += Number(item.contractSum) || 0;
+        const ipcTotal = calculateContractIPCSum(item);
+        const voTotal = calculateContractVOSum(item);
+
+        totalDisbursed += (Number(item.advancePayment) || 0) + ipcTotal;
+        totalVO += voTotal;
+        
+        if (Array.isArray(item.variations)) totalVOCount += item.variations.length;
+        if (Array.isArray(item.ipcs)) totalIPCCount += item.ipcs.length;
+
+        if (item.issues && item.issues.trim().length > 0) pendingIssues++;
+        if (item.engineer === "Eng. Rasika") rasikaCount++;
+        else if (item.engineer === "Eng. Oshani") oshaniCount++;
+      });
+
+      document.getElementById('kpiTotalCount').innerText = totalCount;
+      document.getElementById('kpiEngineerDistribution').innerText = `Rasika: ${rasikaCount} • Oshani: ${oshaniCount}`;
+      document.getElementById('kpiTotalSum').innerText = fmtLKR(totalSum);
+      document.getElementById('kpiTotalDisbursed').innerText = fmtLKR(totalDisbursed);
+      document.getElementById('kpiDisbursedBreakdown').innerText = `Adv + ${totalIPCCount} IPCs Total`;
+      document.getElementById('kpiTotalVO').innerText = fmtLKR(totalVO);
+      document.getElementById('kpiVOCount').innerText = `${totalVOCount} Approved Variations`;
+      document.getElementById('kpiPendingIssues').innerText = pendingIssues;
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('contractsTableBody');
+      const emptyState = document.getElementById('emptyState');
+      const searchQuery = (document.getElementById('filterSearch').value || '').toLowerCase().trim();
+      const filterNature = document.getElementById('filterVONature').value;
+      const filterEng = document.getElementById('filterEngineer').value;
+
+      tbody.innerHTML = '';
+      let visibleCount = 0;
+
+      contracts.forEach((item, index) => {
+        const itemVariations = item.variations || [];
+        const itemIPCs = item.ipcs || [];
+
+        const matchVOQuery = itemVariations.some(v => 
+          (v.voNo && v.voNo.toLowerCase().includes(searchQuery)) ||
+          (v.voDesc && v.voDesc.toLowerCase().includes(searchQuery)) ||
+          (v.voNature && v.voNature.toLowerCase().includes(searchQuery))
+        );
+
+        const matchIPCQuery = itemIPCs.some(ipc =>
+          (ipc.ipcNo && ipc.ipcNo.toLowerCase().includes(searchQuery)) ||
+          (ipc.ipcRemarks && ipc.ipcRemarks.toLowerCase().includes(searchQuery))
+        );
+
+        const matchSearch = !searchQuery || 
+          (item.contractNo && item.contractNo.toLowerCase().includes(searchQuery)) ||
+          (item.engineer && item.engineer.toLowerCase().includes(searchQuery)) ||
+          (item.description && item.description.toLowerCase().includes(searchQuery)) ||
+          (item.issues && item.issues.toLowerCase().includes(searchQuery)) ||
+          matchVOQuery ||
+          matchIPCQuery;
+
+        const matchNature = !filterNature || itemVariations.some(v => v.voNature === filterNature);
+        const matchEng = !filterEng || item.engineer === filterEng;
+
+        if (!matchSearch || !matchNature || !matchEng) return;
+
+        visibleCount++;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors align-top";
+
+        // IPC Multiple Display Markup
+        let ipcHtml = '-';
+        const totalIPCSum = calculateContractIPCSum(item);
+        if (itemIPCs.length > 0) {
+          ipcHtml = `
+            <div class="space-y-1.5 py-0.5">
+              ${itemIPCs.map(ipc => `
+                <div class="flex items-center justify-between text-[11px] gap-2 border-b border-blue-100/70 pb-1 last:border-b-0 last:pb-0">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="px-1.5 py-0.2 rounded font-bold text-[10px] bg-blue-100 text-blue-900 shrink-0">${ipc.ipcNo || 'IPC'}</span>
+                    <span class="text-slate-500 text-[10px] truncate max-w-[120px]" title="${ipc.ipcRemarks || ''}">${ipc.ipcRemarks || ''}</span>
+                  </div>
+                  <span class="font-semibold text-blue-950 tabular-nums shrink-0">${fmtLKR(ipc.ipcAmount)}</span>
+                </div>
+              `).join('')}
+              <div class="pt-1 mt-1 border-t border-blue-200 flex justify-between items-center text-[10px] font-bold text-blue-900">
+                <span>Total (${itemIPCs.length}):</span>
+                <span class="text-blue-950 font-bold">${fmtLKR(totalIPCSum)}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        // Variation Orders Multiple Display Markup
+        const displayVOs = filterNature ? itemVariations.filter(v => v.voNature === filterNature) : itemVariations;
+        let voNoHtml = '-';
+        let voNatureHtml = '-';
+        let voAmountHtml = '-';
+        let voDescHtml = '-';
+
+        if (displayVOs.length > 0) {
+          voNoHtml = displayVOs.map(v => `
+            <div class="py-1 font-semibold text-purple-900 border-b border-purple-100 last:border-b-0 whitespace-nowrap">
+              ${v.voNo || 'VO-?'}
+            </div>
+          `).join('');
+
+          voNatureHtml = displayVOs.map(v => {
+            let badgeColor = "bg-slate-100 text-slate-700";
+            if (v.voNature === 'Work') badgeColor = "bg-blue-100 text-blue-800";
+            else if (v.voNature === 'Omission') badgeColor = "bg-red-100 text-red-800";
+            else if (v.voNature === 'SSR') badgeColor = "bg-purple-100 text-purple-800";
+            else if (v.voNature === 'Addl. Work') badgeColor = "bg-emerald-100 text-emerald-800";
+            return `
+              <div class="py-1 border-b border-purple-100 last:border-b-0">
+                <span class="inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full ${badgeColor}">${v.voNature || '-'}</span>
+              </div>
+            `;
+          }).join('');
+
+          voAmountHtml = displayVOs.map(v => `
+            <div class="py-1 text-right font-semibold text-purple-900 tabular-nums border-b border-purple-100 last:border-b-0">
+              ${fmtLKR(v.voAmount)}
+            </div>
+          `).join('');
+
+          voDescHtml = displayVOs.map(v => `
+            <div class="py-1 text-slate-600 max-w-[200px] truncate border-b border-purple-100 last:border-b-0" title="${v.voDesc || ''}">
+              ${v.voDesc || '-'}
+            </div>
+          `).join('');
+        }
+
+        const engBadge = item.engineer === 'Eng. Oshani'
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Eng. Oshani</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-800 border border-sky-200">Eng. Rasika</span>';
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-semibold text-brand-900 border-r border-slate-200 whitespace-nowrap">
+            ${item.contractNo || '-'}
+            <div class="flex items-center gap-1 mt-1">
+              ${itemIPCs.length > 0 ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-blue-100 text-blue-800">${itemIPCs.length} IPCs</span>` : ''}
+              ${itemVariations.length > 0 ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-800">${itemVariations.length} VOs</span>` : ''}
+            </div>
+          </td>
+          <td class="py-2.5 px-3 border-r border-slate-200 whitespace-nowrap">${engBadge}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 font-medium text-slate-800">${item.description || '-'}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 text-right font-semibold text-slate-900 tabular-nums">${fmtLKR(item.contractSum)}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 text-right text-slate-600 tabular-nums">${fmtLKR(item.pSum)}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 text-right text-slate-600 tabular-nums">${fmtLKR(item.contingencies)}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 text-right bg-blue-50/20 text-blue-900 font-medium tabular-nums">${fmtLKR(item.advancePayment)}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 bg-blue-50/20">${ipcHtml}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 bg-purple-50/20">${voNoHtml}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 bg-purple-50/20">${voNatureHtml}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 bg-purple-50/20">${voAmountHtml}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 bg-purple-50/20">${voDescHtml}</td>
+          <td class="py-2.5 px-3 border-r border-slate-200 max-w-[220px]">
+            ${item.issues ? `
+              <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200/70 max-w-full truncate" title="${item.issues}">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                <span class="truncate">${item.issues}</span>
+              </span>
+            ` : '<span class="text-slate-400 text-[11px]">None</span>'}
+          </td>
+          <td class="py-2.5 px-3 text-center whitespace-nowrap">
+            <div class="inline-flex items-center gap-1.5">
+              <button onclick="editContract(${index})" title="Edit" class="p-1.5 rounded-md text-slate-500 hover:text-brand-700 hover:bg-slate-100 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </button>
+              <button onclick="promptDelete(${index})" title="Delete" class="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      updateKPIs();
+    }
+
+    // IPC Row Management in Modal
+    function recalculateModalPaymentTotals() {
+      const adv = parseFloat(document.getElementById('modalAdvancePayment').value) || 0;
+      const ipcInputs = document.querySelectorAll('.ipc-input-amount');
+      let ipcSum = 0;
+      ipcInputs.forEach(inp => {
+        ipcSum += parseFloat(inp.value) || 0;
+      });
+      document.getElementById('modalIPCTotalSum').innerText = fmtLKR(ipcSum);
+      document.getElementById('modalDisbursedTotalSum').innerText = fmtLKR(adv + ipcSum);
+    }
+
+    function addIPCRow(ipcData = { ipcNo: '', ipcAmount: '', ipcRemarks: '' }) {
+      const container = document.getElementById('ipcContainer');
+      const rowId = 'ipc_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = "p-3 bg-blue-50/50 border border-blue-200/80 rounded-lg relative space-y-2";
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-blue-900 uppercase tracking-wide">IPC Payment Item</span>
+          <button type="button" onclick="removeIPCRow('${rowId}')" class="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Remove
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">IPC Number *</label>
+            <input type="text" class="ipc-input-no w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-blue-500 bg-white" placeholder="e.g. IPC-01, IPC-02" value="${ipcData.ipcNo || ''}" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">IPC Amount (LKR) *</label>
+            <input type="number" step="0.01" oninput="recalculateModalPaymentTotals()" class="ipc-input-amount w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-blue-500 bg-white" placeholder="0.00" value="${ipcData.ipcAmount !== undefined ? ipcData.ipcAmount : ''}" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">IPC Remarks / Certification Stage</label>
+            <input type="text" class="ipc-input-remarks w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-blue-500 bg-white" placeholder="e.g. Pump delivery, 40% certified" value="${ipcData.ipcRemarks || ''}" />
+          </div>
+        </div>
+      `;
+
+      container.appendChild(div);
+      recalculateModalPaymentTotals();
+    }
+
+    function removeIPCRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) {
+        el.remove();
+        recalculateModalPaymentTotals();
+      }
+    }
+
+    // VO Row Management in Modal
+    function recalculateModalVOTotal() {
+      const amountInputs = document.querySelectorAll('.vo-input-amount');
+      let sum = 0;
+      amountInputs.forEach(inp => {
+        sum += parseFloat(inp.value) || 0;
+      });
+      document.getElementById('modalVOTotalSum').innerText = fmtLKR(sum);
+    }
+
+    function addVORow(voData = { voNo: '', voNature: '', voAmount: '', voDesc: '' }) {
+      const container = document.getElementById('voContainer');
+      const rowId = 'vo_row_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = "p-3 bg-purple-50/50 border border-purple-200/80 rounded-lg relative space-y-2.5";
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-purple-900 uppercase tracking-wide">Variation Order Item</span>
+          <button type="button" onclick="removeVORow('${rowId}')" class="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-semibold">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Remove
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">VO Number</label>
+            <input type="text" class="vo-input-no w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-purple-500 bg-white" placeholder="e.g. VO-01" value="${voData.voNo || ''}" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">VO Nature</label>
+            <select class="vo-input-nature w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-purple-500 bg-white">
+              <option value="">None / Not Applicable</option>
+              <option value="Work" ${voData.voNature === 'Work' ? 'selected' : ''}>Work</option>
+              <option value="Omission" ${voData.voNature === 'Omission' ? 'selected' : ''}>Omission</option>
+              <option value="SSR" ${voData.voNature === 'SSR' ? 'selected' : ''}>SSR</option>
+              <option value="Addl. Work" ${voData.voNature === 'Addl. Work' ? 'selected' : ''}>Addl. Work</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">VO Amount (LKR)</label>
+            <input type="number" step="0.01" oninput="recalculateModalVOTotal()" class="vo-input-amount w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-purple-500 bg-white" placeholder="0.00" value="${voData.voAmount !== undefined ? voData.voAmount : ''}" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">VO Description</label>
+          <input type="text" class="vo-input-desc w-full text-xs rounded border border-slate-300 p-1.5 focus:ring-1 focus:ring-purple-500 bg-white" placeholder="Scope, items, or justification" value="${voData.voDesc || ''}" />
+        </div>
+      `;
+
+      container.appendChild(div);
+      recalculateModalVOTotal();
+    }
+
+    function removeVORow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) {
+        el.remove();
+        recalculateModalVOTotal();
+      }
+    }
+
+    function openModal(editIdx = -1) {
+      document.getElementById('editIndex').value = editIdx;
+      const modal = document.getElementById('contractModal');
+      const form = document.getElementById('contractForm');
+      const voContainer = document.getElementById('voContainer');
+      const ipcContainer = document.getElementById('ipcContainer');
+      voContainer.innerHTML = '';
+      ipcContainer.innerHTML = '';
+
+      if (editIdx >= 0) {
+        const item = contracts[editIdx];
+        document.getElementById('modalTitle').innerText = "Edit Contract Record";
+        document.getElementById('modalContractNo').value = item.contractNo || '';
+        document.getElementById('modalEngineer').value = item.engineer || 'Eng. Rasika';
+        document.getElementById('modalContractDesc').value = item.description || '';
+        document.getElementById('modalContractSum').value = item.contractSum || '';
+        document.getElementById('modalPSum').value = item.pSum || '';
+        document.getElementById('modalContingencies').value = item.contingencies || '';
+        document.getElementById('modalAdvancePayment').value = item.advancePayment || '';
+        document.getElementById('modalIssues').value = item.issues || '';
+
+        // Populate multiple IPCs
+        const existingIPCs = item.ipcs || [];
+        if (existingIPCs.length > 0) {
+          existingIPCs.forEach(ipc => addIPCRow(ipc));
+        } else {
+          addIPCRow();
+        }
+
+        // Populate multiple VOs
+        const existingVOs = item.variations || [];
+        if (existingVOs.length > 0) {
+          existingVOs.forEach(v => addVORow(v));
+        } else {
+          addVORow();
+        }
+      } else {
+        document.getElementById('modalTitle').innerText = "Add New Contract Entry";
+        form.reset();
+        document.getElementById('modalEngineer').value = "Eng. Rasika";
+        addIPCRow();
+        addVORow();
+      }
+
+      recalculateModalPaymentTotals();
+      recalculateModalVOTotal();
+      modal.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('contractModal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editIndex').value, 10);
+
+      // Collect IPC payments
+      const ipcs = [];
+      const ipcCards = document.querySelectorAll('#ipcContainer > div');
+      ipcCards.forEach(card => {
+        const no = card.querySelector('.ipc-input-no').value.trim();
+        const amt = parseFloat(card.querySelector('.ipc-input-amount').value) || 0;
+        const remarks = card.querySelector('.ipc-input-remarks').value.trim();
+
+        if (no || amt !== 0 || remarks) {
+          ipcs.push({
+            ipcNo: no || ('IPC-' + (ipcs.length + 1)),
+            ipcAmount: amt,
+            ipcRemarks: remarks
+          });
+        }
+      });
+
+      // Collect Variation Orders
+      const variations = [];
+      const voCards = document.querySelectorAll('#voContainer > div');
+      voCards.forEach(card => {
+        const no = card.querySelector('.vo-input-no').value.trim();
+        const nature = card.querySelector('.vo-input-nature').value;
+        const amount = parseFloat(card.querySelector('.vo-input-amount').value) || 0;
+        const desc = card.querySelector('.vo-input-desc').value.trim();
+
+        if (no || nature || amount !== 0 || desc) {
+          variations.push({
+            voNo: no || ('VO-' + (variations.length + 1)),
+            voNature: nature,
+            voAmount: amount,
+            voDesc: desc
+          });
+        }
+      });
+
+      const record = {
+        contractNo: document.getElementById('modalContractNo').value.trim(),
+        engineer: document.getElementById('modalEngineer').value,
+        description: document.getElementById('modalContractDesc').value.trim(),
+        contractSum: parseFloat(document.getElementById('modalContractSum').value) || 0,
+        pSum: parseFloat(document.getElementById('modalPSum').value) || 0,
+        contingencies: parseFloat(document.getElementById('modalContingencies').value) || 0,
+        advancePayment: parseFloat(document.getElementById('modalAdvancePayment').value) || 0,
+        ipcs: ipcs,
+        variations: variations,
+        issues: document.getElementById('modalIssues').value.trim()
+      };
+
+      if (editIdx >= 0) {
+        contracts[editIdx] = record;
+        showToast("Contract record successfully updated!");
+      } else {
+        contracts.push(record);
+        showToast("New contract added successfully!");
+      }
+
+      saveState();
+      closeModal();
+      renderTable();
+    }
+
+    function editContract(index) {
+      openModal(index);
+    }
+
+    // Custom in-app deletion confirmation (replacing confirm())
+    let deleteTargetIndex = null;
+    function promptDelete(index) {
+      deleteTargetIndex = index;
+      const target = contracts[index];
+      document.getElementById('deleteConfirmText').innerText = `Are you sure you want to delete contract "${target.contractNo || 'Entry'}"?`;
+      document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      deleteTargetIndex = null;
+      document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+      if (deleteTargetIndex !== null && deleteTargetIndex >= 0) {
+        contracts.splice(deleteTargetIndex, 1);
+        saveState();
+        renderTable();
+        showToast("Contract record deleted.", "🗑");
+      }
+      closeDeleteModal();
+    });
+
+    function resetFilters() {
+      document.getElementById('filterSearch').value = '';
+      document.getElementById('filterEngineer').value = '';
+      document.getElementById('filterVONature').value = '';
+      renderTable();
+    }
+
+    function exportToCSV() {
+      const headers = [
+        "Contract Number", "Chief Engineer", "Contract Description", "Contract Sum", "P. Sum Amount", "Contingencies Amount",
+        "Advance Payment amount", "IPC Number", "IPC Amount", "IPC Remarks", "VO Number", "VO Nature", "VO Amount", "VO Description", "Issues Need to Attend"
+      ];
+
+      const csvRows = [headers.join(',')];
+
+      contracts.forEach(c => {
+        const vos = (c.variations && c.variations.length > 0) ? c.variations : [{ voNo: '', voNature: '', voAmount: 0, voDesc: '' }];
+        const ipcs = (c.ipcs && c.ipcs.length > 0) ? c.ipcs : [{ ipcNo: '', ipcAmount: 0, ipcRemarks: '' }];
+        const maxLines = Math.max(vos.length, ipcs.length);
+
+        for (let i = 0; i < maxLines; i++) {
+          const v = vos[i] || { voNo: '', voNature: '', voAmount: 0, voDesc: '' };
+          const ipc = ipcs[i] || { ipcNo: '', ipcAmount: 0, ipcRemarks: '' };
+
+          const row = [
+            `"${(c.contractNo || '').replace(/"/g, '""')}"`,
+            `"${(c.engineer || '').replace(/"/g, '""')}"`,
+            `"${(c.description || '').replace(/"/g, '""')}"`,
+            c.contractSum || 0,
+            c.pSum || 0,
+            c.contingencies || 0,
+            c.advancePayment || 0,
+            `"${(ipc.ipcNo || '').replace(/"/g, '""')}"`,
+            ipc.ipcAmount || 0,
+            `"${(ipc.ipcRemarks || '').replace(/"/g, '""')}"`,
+            `"${(v.voNo || '').replace(/"/g, '""')}"`,
+            `"${(v.voNature || '').replace(/"/g, '""')}"`,
+            v.voAmount || 0,
+            `"${(v.voDesc || '').replace(/"/g, '""')}"`,
+            `"${(c.issues || '').replace(/"/g, '""')}"`
+          ];
+          csvRows.push(row.join(','));
+        }
+      });
+
+      const blob = new Blob([csvRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `CEDE_Budget_Tracker_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("CSV file exported successfully!");
+    }
+
+    function openSyncModal() {
+      const savedUrl = localStorage.getItem(APPS_SCRIPT_URL_KEY) || DEFAULT_APPS_SCRIPT_URL;
+      document.getElementById('appScriptUrlInput').value = savedUrl;
+      const statusBox = document.getElementById('syncStatusBox');
+      statusBox.classList.add('hidden');
+      document.getElementById('syncModal').classList.remove('hidden');
+    }
+
+    function closeSyncModal() {
+      document.getElementById('syncModal').classList.add('hidden');
+    }
+
+    function getActiveSyncUrl() {
+      return (localStorage.getItem(APPS_SCRIPT_URL_KEY) || DEFAULT_APPS_SCRIPT_URL).trim();
+    }
+
+    async function quickSync(action) {
+      const url = getActiveSyncUrl();
+      const pullBtn = document.getElementById('quickPullBtn');
+      const pushBtn = document.getElementById('quickPushBtn');
+      const targetBtn = action === 'pull' ? pullBtn : pushBtn;
+      const originalHtml = targetBtn.innerHTML;
+
+      targetBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin text-current" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>${action === 'pull' ? 'Pulling...' : 'Pushing...'}</span>
+      `;
+      targetBtn.disabled = true;
+
+      try {
+        await executeSync(url, action);
+      } finally {
+        targetBtn.innerHTML = originalHtml;
+        targetBtn.disabled = false;
+      }
+    }
+
+    async function executeSync(url, action) {
+      if (action === 'push') {
+        const res = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({ contracts: contracts }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        });
+        const result = await res.json();
+        showToast(`Successfully pushed ${result.rowsWritten || contracts.length} rows to Google Sheet!`, "☁️");
+        return result;
+      } else {
+        const res = await fetch(url);
+        const result = await res.json();
+        if (result && result.data && result.data.length > 2) {
+          const sheetRows = result.data.slice(2);
+          const contractMap = {};
+
+          sheetRows.forEach(row => {
+            const contractNo = row[0];
+            if (!contractNo) return;
+
+            if (!contractMap[contractNo]) {
+              contractMap[contractNo] = {
+                contractNo: contractNo,
+                engineer: row[1] || 'Eng. Rasika',
+                description: row[2] || '',
+                contractSum: parseFloat(row[3]) || 0,
+                pSum: parseFloat(row[4]) || 0,
+                contingencies: parseFloat(row[5]) || 0,
+                advancePayment: parseFloat(row[6]) || 0,
+                ipcs: [],
+                variations: [],
+                issues: row[12] || ''
+              };
+            }
+
+            // Parse IPC column
+            const rawIPC = row[7];
+            if (rawIPC) {
+              let ipcNo = 'IPC-' + (contractMap[contractNo].ipcs.length + 1);
+              let ipcAmount = 0;
+              let ipcRemarks = '';
+
+              if (typeof rawIPC === 'number') {
+                ipcAmount = rawIPC;
+              } else if (typeof rawIPC === 'string') {
+                const match = rawIPC.match(/^(IPC[-\s]?\d+)?\s*:?\s*([\d,\.]+)?\s*(\((.*)\))?$/i);
+                if (match) {
+                  if (match[1]) ipcNo = match[1];
+                  if (match[2]) ipcAmount = parseFloat(match[2].replace(/,/g, '')) || 0;
+                  if (match[4]) ipcRemarks = match[4];
+                } else {
+                  ipcAmount = parseFloat(rawIPC.replace(/[^\d.-]/g, '')) || 0;
+                }
+              }
+
+              if (ipcAmount !== 0 || rawIPC) {
+                contractMap[contractNo].ipcs.push({
+                  ipcNo: ipcNo,
+                  ipcAmount: ipcAmount,
+                  ipcRemarks: ipcRemarks
+                });
+              }
+            }
+
+            // Parse VO column
+            if (row[8] || row[9] || row[10] || row[11]) {
+              contractMap[contractNo].variations.push({
+                voNo: row[8] || ('VO-' + (contractMap[contractNo].variations.length + 1)),
+                voNature: row[9] || '',
+                voAmount: parseFloat(row[10]) || 0,
+                voDesc: row[11] || ''
+              });
+            }
+          });
+
+          const parsedList = Object.values(contractMap);
+          if (parsedList.length > 0) {
+            contracts = parsedList;
+            saveState();
+            renderTable();
+            showToast(`Pulled ${parsedList.length} contracts from Google Sheet!`, "📥");
+          } else {
+            showToast("No data rows found in Google Sheet.", "⚠️");
+          }
+        } else {
+          showToast("Sheet returned empty or header-only data.", "ℹ️");
+        }
+        return result;
+      }
+    }
+
+    async function syncWithAppsScript(action) {
+      const url = document.getElementById('appScriptUrlInput').value.trim() || DEFAULT_APPS_SCRIPT_URL;
+      const statusBox = document.getElementById('syncStatusBox');
+
+      localStorage.setItem(APPS_SCRIPT_URL_KEY, url);
+      statusBox.className = "p-3 rounded-lg border text-xs bg-blue-50 text-blue-700 border-blue-200 block";
+      statusBox.innerText = action === 'pull' ? "Fetching data from Google Sheet..." : "Pushing contracts to Google Sheet...";
+
+      try {
+        const result = await executeSync(url, action);
+        statusBox.className = "p-3 rounded-lg border text-xs bg-emerald-50 text-emerald-800 border-emerald-200 block";
+        statusBox.innerText = action === 'push'
+          ? `Success! ${result.rowsWritten || contracts.length} rows written to Google Sheet.`
+          : `Success! Retrieved latest entries from Google Sheet.`;
+      } catch (err) {
+        console.error(err);
+        statusBox.className = "p-3 rounded-lg border text-xs bg-red-50 text-red-700 border-red-200 block";
+        statusBox.innerText = "Sync error: " + err.message;
+      }
+    }
+
+    function copyAppsScriptCode() {
+      const code = document.getElementById('appsScriptCodeBlock').innerText;
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showToast("Google Apps Script copied to clipboard! Paste it into Extensions > Apps Script.");
+    }
+
+    async function syncWithAppsScript(action) {
+      const url = document.getElementById('appScriptUrlInput').value.trim();
+      const statusBox = document.getElementById('syncStatusBox');
+
+      if (!url) {
+        statusBox.className = "p-3 rounded-lg border text-xs bg-red-50 text-red-700 border-red-200 block";
+        statusBox.innerText = "Please provide your deployed Google Apps Script Web App URL first.";
+        return;
+      }
+
+      localStorage.setItem(APPS_SCRIPT_URL_KEY, url);
+      statusBox.className = "p-3 rounded-lg border text-xs bg-blue-50 text-blue-700 border-blue-200 block";
+      statusBox.innerText = action === 'pull' ? "Fetching data from Google Sheet..." : "Pushing contracts to Google Sheet...";
+
+      try {
+        if (action === 'push') {
+          const res = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({ contracts: contracts }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+          });
+          const result = await res.json();
+          statusBox.className = "p-3 rounded-lg border text-xs bg-emerald-50 text-emerald-800 border-emerald-200 block";
+          statusBox.innerText = `Success! ${result.count || contracts.length} rows written to Google Sheet.`;
+          showToast("Data pushed to Google Sheet successfully!");
+        } else {
+          const res = await fetch(url);
+          const result = await res.json();
+          if (result && result.data && result.data.length > 2) {
+            const sheetRows = result.data.slice(2);
+            const contractMap = {};
+
+            sheetRows.forEach(row => {
+              const contractNo = row[0];
+              if (!contractNo) return;
+
+              if (!contractMap[contractNo]) {
+                contractMap[contractNo] = {
+                  contractNo: contractNo,
+                  engineer: row[1] || 'Eng. Rasika',
+                  description: row[2] || '',
+                  contractSum: parseFloat(row[3]) || 0,
+                  pSum: parseFloat(row[4]) || 0,
+                  contingencies: parseFloat(row[5]) || 0,
+                  advancePayment: parseFloat(row[6]) || 0,
+                  ipcs: [],
+                  variations: [],
+                  issues: row[12] || ''
+                };
+              }
+
+              // Parse IPC column
+              const rawIPC = row[7];
+              if (rawIPC) {
+                let ipcNo = 'IPC-' + (contractMap[contractNo].ipcs.length + 1);
+                let ipcAmount = 0;
+                let ipcRemarks = '';
+
+                if (typeof rawIPC === 'number') {
+                  ipcAmount = rawIPC;
+                } else if (typeof rawIPC === 'string') {
+                  const match = rawIPC.match(/^(IPC[-\s]?\d+)?\s*:?\s*([\d,\.]+)?\s*(\((.*)\))?$/i);
+                  if (match) {
+                    if (match[1]) ipcNo = match[1];
+                    if (match[2]) ipcAmount = parseFloat(match[2].replace(/,/g, '')) || 0;
+                    if (match[4]) ipcRemarks = match[4];
+                  } else {
+                    ipcAmount = parseFloat(rawIPC.replace(/[^\d.-]/g, '')) || 0;
+                  }
+                }
+
+                if (ipcAmount !== 0 || rawIPC) {
+                  contractMap[contractNo].ipcs.push({
+                    ipcNo: ipcNo,
+                    ipcAmount: ipcAmount,
+                    ipcRemarks: ipcRemarks
+                  });
+                }
+              }
+
+              // Parse VO column
+              if (row[8] || row[9] || row[10]) {
+                contractMap[contractNo].variations.push({
+                  voNo: row[8] || ('VO-' + (contractMap[contractNo].variations.length + 1)),
+                  voNature: row[9] || '',
+                  voAmount: parseFloat(row[10]) || 0,
+                  voDesc: row[11] || ''
+                });
+              }
+            });
+
+            const parsedList = Object.values(contractMap);
+            if (parsedList.length > 0) {
+              contracts = parsedList;
+              saveState();
+              renderTable();
+              statusBox.className = "p-3 rounded-lg border text-xs bg-emerald-50 text-emerald-800 border-emerald-200 block";
+              statusBox.innerText = `Successfully imported ${parsedList.length} contracts with their IPCs and VOs from Google Sheet.`;
+              showToast("Data pulled from Google Sheet!");
+            } else {
+              statusBox.className = "p-3 rounded-lg border text-xs bg-amber-50 text-amber-800 border-amber-200 block";
+              statusBox.innerText = "No data rows found below row 2 in the sheet.";
+            }
+          } else {
+            statusBox.className = "p-3 rounded-lg border text-xs bg-amber-50 text-amber-800 border-amber-200 block";
+            statusBox.innerText = "Google Sheet returned empty or header-only data.";
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        statusBox.className = "p-3 rounded-lg border text-xs bg-red-50 text-red-700 border-red-200 block";
+        statusBox.innerText = "Sync error: " + err.message + ". Ensure your Web App is deployed with 'Who has access: Anyone'.";
+      }
+    }
+
+    // Initial render
+    window.onload = function() {
+      renderTable();
+    };
+  </script>
+</body>
+</html>

@@ -264,8 +264,8 @@
               <th colspan="6" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-slate-200/80">
                 Contract Particulars
               </th>
-              <th colspan="2" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-blue-100/70 text-blue-900">
-                Current Payment Stage
+              <th colspan="4" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-blue-100/70 text-blue-900">
+                Current Payment Stage & Utilization
               </th>
               <th colspan="4" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-amber-100/70 text-amber-900">
                 Variation Orders (VO)
@@ -284,8 +284,9 @@
               <th class="px-3.5 py-2 text-right whitespace-nowrap">P. Sum</th>
               <th class="px-3.5 py-2 text-right whitespace-nowrap">Contingencies</th>
               <th class="px-3.5 py-2 text-right whitespace-nowrap">Advance Payment</th>
-              <th class="px-3.5 py-2 min-w-[220px]">IPC Amounts</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">Total Paid</th>
+              <th class="px-3.5 py-2 whitespace-nowrap">IPC No</th>
+              <th class="px-3.5 py-2 text-right whitespace-nowrap">IPC Amount</th>
+              <th class="px-3.5 py-2 min-w-[170px] text-right whitespace-nowrap">Total Paid & Progress</th>
               <th class="px-3.5 py-2 whitespace-nowrap">VO Number</th>
               <th class="px-3.5 py-2 whitespace-nowrap">VO Nature</th>
               <th class="px-3.5 py-2 text-right whitespace-nowrap">VO Amount</th>
@@ -670,24 +671,49 @@
         let ipcSum = 0;
         (c.ipcs || []).forEach(i => { ipcSum += Number(i.ipcAmount) || 0; });
         const totalPaid = (Number(c.advancePayment) || 0) + ipcSum;
+        const contractSumVal = Number(c.contractSum) || 0;
+
+        // Calculate Utilization % against Contract Sum
+        const utilPct = contractSumVal > 0 ? (totalPaid / contractSumVal) * 100 : 0;
+        const clampedPct = Math.min(Math.max(utilPct, 0), 100);
+
+        let progressColor = "bg-emerald-500";
+        let statusBadge = `<span class="text-[10px] font-semibold text-emerald-700">${utilPct.toFixed(1)}%</span>`;
+        if (utilPct > 100) {
+          progressColor = "bg-rose-500";
+          statusBadge = `<span class="px-1 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700">${utilPct.toFixed(1)}% (Over)</span>`;
+        } else if (utilPct >= 85) {
+          progressColor = "bg-amber-500";
+          statusBadge = `<span class="text-[10px] font-semibold text-amber-700">${utilPct.toFixed(1)}%</span>`;
+        } else if (utilPct >= 50) {
+          progressColor = "bg-blue-600";
+          statusBadge = `<span class="text-[10px] font-semibold text-blue-700">${utilPct.toFixed(1)}%</span>`;
+        }
 
         // Determine Chief Engineer Badge Styling
         const engBadge = c.engineer === "Eng. Oshani" 
           ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Eng. Oshani</span>`
           : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">Eng. Rasika</span>`;
 
-        // Format IPC column display
-        let ipcsHtml = '';
+        // Format separated IPC No and IPC Amount columns
+        let ipcNosHtml = '';
+        let ipcAmountsHtml = '';
         if (c.ipcs && c.ipcs.length > 0) {
-          ipcsHtml = `<div class="space-y-1.5">` + c.ipcs.map(ipc => `
-            <div class="flex items-center justify-between text-[11px] bg-slate-50 px-2 py-1 rounded border border-slate-200">
-              <span class="font-bold text-blue-700">${ipc.ipcNo || 'IPC'}</span>
-              <span class="font-mono font-medium">${formatLKR(ipc.ipcAmount)}</span>
-              ${ipc.ipcRemarks ? `<span class="text-slate-400 text-[10px] max-w-[90px] truncate" title="${ipc.ipcRemarks}">(${ipc.ipcRemarks})</span>` : ''}
+          ipcNosHtml = c.ipcs.map(ipc => `
+            <div class="py-1 flex items-center gap-1 font-semibold text-blue-800">
+              <span>${ipc.ipcNo || 'IPC'}</span>
+              ${ipc.ipcRemarks ? `<span class="text-[10px] text-slate-400 font-normal truncate max-w-[80px]" title="${ipc.ipcRemarks}">(${ipc.ipcRemarks})</span>` : ''}
             </div>
-          `).join('') + `</div>`;
+          `).join('');
+
+          ipcAmountsHtml = c.ipcs.map(ipc => `
+            <div class="py-1 font-mono text-slate-800 text-right font-medium">
+              ${formatLKR(ipc.ipcAmount)}
+            </div>
+          `).join('');
         } else {
-          ipcsHtml = `<span class="text-slate-400 text-[11px] italic">No IPCs</span>`;
+          ipcNosHtml = `<span class="text-slate-400 text-[11px] italic">-</span>`;
+          ipcAmountsHtml = `<span class="text-slate-400 text-[11px] italic text-right">0.00</span>`;
         }
 
         // Format Variation Orders column display
@@ -747,18 +773,32 @@
           </td>
 
           <!-- Advance Payment -->
-          <td class="px-3.5 py-3 text-right font-mono text-slate-700 whitespace-nowrap bg-blue-50/30">
+          <td class="px-3.5 py-3 text-right font-mono text-slate-700 whitespace-nowrap bg-blue-50/20">
             ${formatLKR(c.advancePayment)}
           </td>
 
-          <!-- IPC Amounts Stacked -->
-          <td class="px-3.5 py-3 bg-blue-50/30">
-            ${ipcsHtml}
+          <!-- IPC No Column -->
+          <td class="px-3.5 py-3 whitespace-nowrap bg-blue-50/20">
+            ${ipcNosHtml}
           </td>
 
-          <!-- Total Paid -->
-          <td class="px-3.5 py-3 text-right font-mono font-bold text-blue-900 bg-blue-50/60 whitespace-nowrap">
-            ${formatLKR(totalPaid)}
+          <!-- IPC Amount Column -->
+          <td class="px-3.5 py-3 text-right whitespace-nowrap bg-blue-50/20">
+            ${ipcAmountsHtml}
+          </td>
+
+          <!-- Total Paid & Completion Progress Bar -->
+          <td class="px-3.5 py-3 bg-blue-50/40">
+            <div class="text-right font-mono font-bold text-blue-900 whitespace-nowrap">
+              ${formatLKR(totalPaid)}
+            </div>
+            <div class="mt-1.5 w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner">
+              <div class="h-2 rounded-full transition-all duration-300 ${progressColor}" style="width: ${clampedPct}%"></div>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <span class="text-[10px] text-slate-400 font-medium">Progress</span>
+              ${statusBadge}
+            </div>
           </td>
 
           <!-- VO No -->
@@ -1110,33 +1150,47 @@
                 advancePayment: parseFloat(row[6]) || 0,
                 ipcs: [],
                 variations: [],
-                issues: (row[12] || '').toString().trim()
+                issues: (row[13] || row[12] || '').toString().trim()
               };
               parsedContracts.push(currentContract);
             }
 
             if (currentContract) {
-              // Parse IPC column (Column H: row[7])
-              const ipcRaw = (row[7] || '').toString().trim();
-              if (ipcRaw) {
-                const parts = ipcRaw.split(':');
-                const ipcNo = parts[0] ? parts[0].trim() : 'IPC';
-                let amt = 0;
-                let remarks = '';
+              // Parse separate IPC No (Column H: row[7]) and IPC Amount (Column I: row[8])
+              const rawIpcNo = (row[7] || '').toString().trim();
+              let rawIpcAmt = row[8];
+              let ipcRemarks = '';
+
+              // Backward compatibility if single column had "IPC-01: 2,500,000"
+              if (rawIpcNo.includes(':') && (rawIpcAmt === '' || rawIpcAmt === undefined)) {
+                const parts = rawIpcNo.split(':');
+                const parsedNo = parts[0].trim();
+                let parsedAmt = 0;
                 if (parts[1]) {
                   const amtMatch = parts[1].match(/[\d,.]+/);
-                  if (amtMatch) amt = parseFloat(amtMatch[0].replace(/,/g, '')) || 0;
+                  if (amtMatch) parsedAmt = parseFloat(amtMatch[0].replace(/,/g, '')) || 0;
                   const remarkMatch = parts[1].match(/\((.*?)\)/);
-                  if (remarkMatch) remarks = remarkMatch[1].trim();
+                  if (remarkMatch) ipcRemarks = remarkMatch[1].trim();
                 }
-                currentContract.ipcs.push({ ipcNo, ipcAmount: amt, ipcRemarks: remarks });
+                currentContract.ipcs.push({ ipcNo: parsedNo, ipcAmount: parsedAmt, ipcRemarks: ipcRemarks });
+              } else if (rawIpcNo !== '' || (parseFloat(rawIpcAmt) > 0)) {
+                const amtVal = parseFloat(rawIpcAmt) || 0;
+                currentContract.ipcs.push({ ipcNo: rawIpcNo || 'IPC', ipcAmount: amtVal, ipcRemarks: '' });
               }
 
-              // Parse VO columns (Columns I-L: row[8]-row[11])
-              const voNo = (row[8] || '').toString().trim();
-              const voNature = (row[9] || '').toString().trim();
-              const voAmt = parseFloat(row[10]) || 0;
-              const voDesc = (row[11] || '').toString().trim();
+              // Parse VO columns: VO No (Col J: row[9]), VO Nature (Col K: row[10]), VO Amount (Col L: row[11]), VO Desc (Col M: row[12])
+              let voNo = (row[9] || '').toString().trim();
+              let voNature = (row[10] || '').toString().trim();
+              let voAmt = parseFloat(row[11]) || 0;
+              let voDesc = (row[12] || '').toString().trim();
+
+              // Fallback to previous 13-col indices if row[9] is numeric
+              if (!voNo && row[8] && isNaN(row[8])) {
+                voNo = (row[8] || '').toString().trim();
+                voNature = (row[9] || '').toString().trim();
+                voAmt = parseFloat(row[10]) || 0;
+                voDesc = (row[11] || '').toString().trim();
+              }
 
               if (voNo || voAmt > 0 || voDesc) {
                 currentContract.variations.push({
@@ -1213,8 +1267,8 @@
     function exportCSV() {
       const headers = [
         "Contract Number", "Chief Engineer", "Contract Description", "Contract Sum", "P. Sum Amount", 
-        "Contingencies Amount", "Advance Payment", "IPC Amounts", "VO Number", "VO Nature", 
-        "VO Amount", "VO Description", "Issues Need to Attend"
+        "Contingencies Amount", "Advance Payment", "IPC No", "IPC Amount", "Total Disbursed", "Disbursed %", 
+        "VO Number", "VO Nature", "VO Amount", "VO Description", "Issues Need to Attend"
       ];
 
       const rows = [];
@@ -1223,14 +1277,15 @@
         const vos = (c.variations && c.variations.length > 0) ? c.variations : [{ voNo: '', voNature: '', voAmount: '', voDesc: '' }];
         const maxLines = Math.max(ipcs.length, vos.length);
 
+        let totalIpc = 0;
+        (c.ipcs || []).forEach(i => { totalIpc += Number(i.ipcAmount) || 0; });
+        const totalPaid = (Number(c.advancePayment) || 0) + totalIpc;
+        const contractSum = Number(c.contractSum) || 0;
+        const pct = contractSum > 0 ? ((totalPaid / contractSum) * 100).toFixed(1) + "%" : "0.0%";
+
         for (let i = 0; i < maxLines; i++) {
           const ipc = ipcs[i] || { ipcNo: '', ipcAmount: '', ipcRemarks: '' };
           const vo = vos[i] || { voNo: '', voNature: '', voAmount: '', voDesc: '' };
-
-          let ipcFormatted = '';
-          if (ipc.ipcNo || ipc.ipcAmount) {
-            ipcFormatted = `${ipc.ipcNo || 'IPC'}: ${formatLKR(ipc.ipcAmount)} ${ipc.ipcRemarks ? '(' + ipc.ipcRemarks + ')' : ''}`;
-          }
 
           rows.push([
             `"${(c.contractNo || '').replace(/"/g, '""')}"`,
@@ -1240,7 +1295,10 @@
             i === 0 ? (c.pSum || 0) : '',
             i === 0 ? (c.contingencies || 0) : '',
             i === 0 ? (c.advancePayment || 0) : '',
-            `"${ipcFormatted.replace(/"/g, '""')}"`,
+            `"${(ipc.ipcNo || '').replace(/"/g, '""')}"`,
+            ipc.ipcAmount !== undefined && ipc.ipcAmount !== '' ? ipc.ipcAmount : '',
+            i === 0 ? totalPaid : '',
+            i === 0 ? `"${pct}"` : '',
             `"${(vo.voNo || '').replace(/"/g, '""')}"`,
             `"${(vo.voNature || '').replace(/"/g, '""')}"`,
             vo.voAmount !== undefined ? vo.voAmount : '',

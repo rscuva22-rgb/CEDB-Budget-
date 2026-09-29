@@ -567,10 +567,15 @@
     let autoSyncTimer = null;
     let isSyncing = false;
     let isModalOpen = false;
+    let lastDataHash = ""; // Prevents unnecessary DOM re-rendering
 
     function formatLKR(val) {
       if (val === undefined || val === null || val === "" || isNaN(val)) return "0.00";
       return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculateDataHash(data) {
+      return JSON.stringify(data);
     }
 
     function showToast(msg, isError = false) {
@@ -1071,9 +1076,10 @@
     function triggerAutoPush() {
       if (!autoSyncEnabled || !SCRIPT_URL) return;
       clearTimeout(debouncePushTimer);
+      // Fast debounce: 300ms instead of 800ms
       debouncePushTimer = setTimeout(() => {
         pushToSheet(true);
-      }, 800);
+      }, 300);
     }
 
     async function pushToSheet(isAuto = false) {
@@ -1085,7 +1091,7 @@
       isSyncing = true;
 
       const pushIcon = document.getElementById('pushIcon');
-      pushIcon.className = "ph-bold ph-spinner animate-spin text-sm";
+      if (pushIcon) pushIcon.className = "ph-bold ph-spinner animate-spin text-sm";
       setSyncStatus("Pushing...", "amber");
 
       try {
@@ -1102,6 +1108,7 @@
 
         const result = await res.json();
         if (result.status === "success") {
+          lastDataHash = calculateDataHash(contracts);
           setSyncStatus("Live Synced", "emerald");
           if (!isAuto) showToast("Google Sheet updated successfully!");
         } else {
@@ -1111,7 +1118,7 @@
         console.error("Error during push:", err);
         setSyncStatus("Offline / Cached", "slate");
       } finally {
-        pushIcon.className = "ph-bold ph-cloud-arrow-up text-sm";
+        if (pushIcon) pushIcon.className = "ph-bold ph-cloud-arrow-up text-sm";
         isSyncing = false;
       }
     }
@@ -1121,8 +1128,10 @@
       isSyncing = true;
 
       const pullIcon = document.getElementById('pullIcon');
-      pullIcon.className = "ph-bold ph-spinner animate-spin text-sm";
-      if (!isAuto) setSyncStatus("Pulling...", "blue");
+      if (!isAuto && pullIcon) {
+        pullIcon.className = "ph-bold ph-spinner animate-spin text-sm";
+        setSyncStatus("Pulling...", "blue");
+      }
 
       try {
         const res = await fetch(SCRIPT_URL + "?ts=" + Date.now());
@@ -1156,12 +1165,10 @@
             }
 
             if (currentContract) {
-              // Parse separate IPC No (Column H: row[7]) and IPC Amount (Column I: row[8])
               const rawIpcNo = (row[7] || '').toString().trim();
               let rawIpcAmt = row[8];
               let ipcRemarks = '';
 
-              // Backward compatibility if single column had "IPC-01: 2,500,000"
               if (rawIpcNo.includes(':') && (rawIpcAmt === '' || rawIpcAmt === undefined)) {
                 const parts = rawIpcNo.split(':');
                 const parsedNo = parts[0].trim();
@@ -1178,13 +1185,11 @@
                 currentContract.ipcs.push({ ipcNo: rawIpcNo || 'IPC', ipcAmount: amtVal, ipcRemarks: '' });
               }
 
-              // Parse VO columns: VO No (Col J: row[9]), VO Nature (Col K: row[10]), VO Amount (Col L: row[11]), VO Desc (Col M: row[12])
               let voNo = (row[9] || '').toString().trim();
               let voNature = (row[10] || '').toString().trim();
               let voAmt = parseFloat(row[11]) || 0;
               let voDesc = (row[12] || '').toString().trim();
 
-              // Fallback to previous 13-col indices if row[9] is numeric
               if (!voNo && row[8] && isNaN(row[8])) {
                 voNo = (row[8] || '').toString().trim();
                 voNature = (row[9] || '').toString().trim();
@@ -1204,9 +1209,14 @@
           });
 
           if (parsedContracts.length > 0) {
-            contracts = parsedContracts;
-            saveLocal();
-            renderTable();
+            const newHash = calculateDataHash(parsedContracts);
+            // Smart update: Only re-render if data has actually changed
+            if (newHash !== lastDataHash) {
+              lastDataHash = newHash;
+              contracts = parsedContracts;
+              saveLocal();
+              renderTable();
+            }
           }
 
           setSyncStatus("Live Synced", "emerald");
@@ -1215,7 +1225,7 @@
       } catch (err) {
         console.error("Error pulling sheet:", err);
       } finally {
-        pullIcon.className = "ph-bold ph-arrows-clockwise text-sm";
+        if (pullIcon) pullIcon.className = "ph-bold ph-arrows-clockwise text-sm";
         isSyncing = false;
       }
     }
@@ -1225,11 +1235,10 @@
       const statusText = document.getElementById('syncStatusText');
       const timeText = document.getElementById('syncTimeText');
 
-      statusText.innerText = text;
+      if (statusText) statusText.innerText = text;
       const now = new Date();
-      timeText.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-      indicator.className = `w-2.5 h-2.5 rounded-full live-pulse bg-${color}-500`;
+      if (timeText) timeText.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if (indicator) indicator.className = `w-2.5 h-2.5 rounded-full live-pulse bg-${color}-500`;
     }
 
     function toggleAutoSync() {
@@ -1249,15 +1258,15 @@
 
     function startAutoSync() {
       clearInterval(autoSyncTimer);
-      // Background poll every 15 seconds
+      // Fast 4-second background poll for real-time responsiveness
       autoSyncTimer = setInterval(() => {
-        if (autoSyncEnabled && !isModalOpen) {
+        if (autoSyncEnabled && !isModalOpen && !document.hidden) {
           pullFromSheet(true);
         }
-      }, 15000);
+      }, 4000);
     }
 
-    // Listen to tab focus to refresh immediately
+    // Refresh immediately whenever user returns to the tab
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && autoSyncEnabled && !isModalOpen) {
         pullFromSheet(true);

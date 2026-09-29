@@ -1,1362 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CEDE Budget & Contract Payment Management System</title>
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Phosphor Icons CDN -->
-  <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#eff6ff',
-              100: '#dbeafe',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              800: '#1e40af',
-              900: '#1e3a8a',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom scrollbars for clean table layout */
-    ::-webkit-scrollbar {
-      width: 7px;
-      height: 7px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    @keyframes pulse-subtle {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.96); }
-    }
-    .live-pulse {
-      animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    /* Print styles for executive reporting */
-    @media print {
-      .no-print { display: none !important; }
-      body { background: #fff !important; padding: 0 !important; }
-      .table-container { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CEDE Budget & Payment Tracker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  @media print{.no-print{display:none!important}}
+</style>
 </head>
-
-<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
-  <!-- Top Navigation Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
-    <div class="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-      
-      <!-- Brand & Title -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-brand-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-          <i class="ph-bold ph-chart-polar text-xl"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">CEDE Budget & Payment Tracker</h1>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">
-              M&E Section
-            </span>
-          </div>
-          <p class="text-xs text-slate-500">Live multi-IPC payment & variation management system</p>
-        </div>
-      </div>
-
-      <div class="flex items-center flex-wrap gap-2.5 sm:gap-3">
-        
-        <!-- Live Real-Time Sync Status Pill -->
-        <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600">
-          <span id="syncIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500 live-pulse"></span>
-          <span id="syncStatusText" class="font-medium">Live Synced</span>
-          <span id="syncTimeText" class="text-slate-400 font-mono text-[11px] hidden sm:inline">Just now</span>
-          <button id="toggleAutoSyncBtn" onclick="toggleAutoSync()" class="ml-1 text-slate-400 hover:text-slate-700 font-semibold underline decoration-slate-300" title="Click to Pause/Resume Auto-Sync">
-            Pause
-          </button>
-        </div>
-
-        <!-- Pull from Sheet Button -->
-        <button onclick="pullFromSheet()" id="btnPull" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 shadow-sm transition">
-          <i id="pullIcon" class="ph-bold ph-arrows-clockwise text-sm"></i>
-          <span>Pull Sheet</span>
-        </button>
-
-        <!-- Push to Sheet Button -->
-        <button onclick="pushToSheet()" id="btnPush" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 shadow-sm transition">
-          <i id="pushIcon" class="ph-bold ph-cloud-arrow-up text-sm"></i>
-          <span>Push Sheet</span>
-        </button>
-
-        <!-- Export CSV Button -->
-        <button onclick="exportCSV()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 shadow-sm transition">
-          <i class="ph-bold ph-file-csv text-sm"></i>
-          <span>Export CSV</span>
-        </button>
-
-        <!-- Direct Google Sheet Link -->
-        <a href="https://docs.google.com/spreadsheets/d/1XEuRY77kUdrLTt5pTVruOKf_OlW-nTBDsmW36eRma8Y/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition">
-          <i class="ph-bold ph-google-logo text-sm"></i>
-          <span>Open Sheet</span>
-        </a>
-
-        <!-- Add Contract Primary Action -->
-        <button onclick="openModal()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-brand-800 hover:bg-brand-700 rounded-lg shadow-sm transition">
-          <i class="ph-bold ph-plus text-sm"></i>
-          <span>+ Add Contract</span>
-        </button>
-      </div>
-
+<body class="bg-slate-50 text-slate-800 text-xs">
+<header class="bg-white border-b sticky top-0 z-30 no-print">
+  <div class="max-w-[1700px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-lg font-bold text-slate-900">CEDE Budget & Payment Tracker</h1>
+      <p class="text-slate-500">Contracts, IPC payments and variation orders</p>
     </div>
-  </header>
-
-  <main class="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
-    
-    <!-- Executive Summary / KPI Cards -->
-    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-      
-      <!-- Total Contracts Card -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Total Contracts</span>
-          <span class="p-1.5 rounded-lg bg-blue-50 text-blue-600"><i class="ph-bold ph-folder text-base"></i></span>
-        </div>
-        <div>
-          <h3 id="statTotalContracts" class="text-2xl font-bold text-slate-900 tracking-tight">0</h3>
-          <p id="statEngineerRatio" class="text-xs text-slate-500 mt-1 font-medium">Rasika: 0 • Oshani: 0</p>
-        </div>
-      </div>
-
-      <!-- Total Contract Sum Card -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Total Contract Sum</span>
-          <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><i class="ph-bold ph-currency-circle-dollar text-base"></i></span>
-        </div>
-        <div>
-          <h3 id="statTotalSum" class="text-2xl font-bold text-slate-900 tracking-tight">Rs. 0.00</h3>
-          <p class="text-xs text-slate-500 mt-1 font-medium">Awarded baseline amount</p>
-        </div>
-      </div>
-
-      <!-- Total Disbursed Card -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Total Disbursed</span>
-          <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600"><i class="ph-bold ph-receipt text-base"></i></span>
-        </div>
-        <div>
-          <h3 id="statTotalDisbursed" class="text-2xl font-bold text-slate-900 tracking-tight">Rs. 0.00</h3>
-          <p id="statDisbursedSub" class="text-xs text-slate-500 mt-1 font-medium">Advance + All IPC Payments</p>
-        </div>
-      </div>
-
-      <!-- Total Variations Card -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Total Variations (VO)</span>
-          <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600"><i class="ph-bold ph-scales text-base"></i></span>
-        </div>
-        <div>
-          <h3 id="statTotalVO" class="text-2xl font-bold text-slate-900 tracking-tight">Rs. 0.00</h3>
-          <p id="statVOSub" class="text-xs text-slate-500 mt-1 font-medium">Net variation across all VOs</p>
-        </div>
-      </div>
-
-      <!-- Issues to Attend Card -->
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div class="flex items-center justify-between text-slate-500 mb-2">
-          <span class="text-xs font-semibold uppercase tracking-wider">Issues to Attend</span>
-          <span class="p-1.5 rounded-lg bg-rose-50 text-rose-600"><i class="ph-bold ph-warning-circle text-base"></i></span>
-        </div>
-        <div>
-          <h3 id="statOpenIssues" class="text-2xl font-bold text-slate-900 tracking-tight">0</h3>
-          <p class="text-xs text-slate-500 mt-1 font-medium">Action items pending attention</p>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Control & Filter Toolbar -->
-    <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
-      
-      <div class="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-        <!-- Search Input -->
-        <div class="relative flex-1 min-w-[220px]">
-          <i class="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-          <input 
-            type="text" 
-            id="searchInput" 
-            oninput="renderTable()" 
-            placeholder="Search by contract #, description, IPC, VO, or issues..." 
-            class="w-full pl-9 pr-3.5 py-1.5 text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"
-          />
-        </div>
-
-        <!-- Filter by Chief Engineer -->
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs font-semibold text-slate-500">Engineer:</span>
-          <select id="engineerFilter" onchange="renderTable()" class="py-1.5 px-2.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-            <option value="">All Chief Engineers</option>
-            <option value="Eng. Rasika">Eng. Rasika</option>
-            <option value="Eng. Oshani">Eng. Oshani</option>
-          </select>
-        </div>
-
-        <!-- Filter by VO Nature -->
-        <div class="flex items-center gap-1.5">
-          <span class="text-xs font-semibold text-slate-500">VO Nature:</span>
-          <select id="voFilter" onchange="renderTable()" class="py-1.5 px-2.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500">
-            <option value="">All VO Natures</option>
-            <option value="Work">Work</option>
-            <option value="Omission">Omission</option>
-            <option value="SSR">SSR</option>
-            <option value="Addl. Work">Addl. Work</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Records Count & Settings Modal Link -->
-      <div class="flex items-center gap-3 text-xs text-slate-500">
-        <span id="recordCountText" class="font-medium">Showing 0 records</span>
-        <button onclick="openSettingsModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-md" title="Settings / Endpoint Config">
-          <i class="ph-bold ph-gear text-base"></i>
-        </button>
-      </div>
-
-    </div>
-
-    <!-- Spreadsheet Structured Table -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-left text-xs">
-          
-          <!-- Hierarchical Merged Header Rows matching Google Sheet -->
-          <thead>
-            <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-              <th colspan="6" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-slate-200/80">
-                Contract Particulars
-              </th>
-              <th colspan="4" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-blue-100/70 text-blue-900">
-                Current Payment Stage & Utilization
-              </th>
-              <th colspan="4" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-amber-100/70 text-amber-900">
-                Variation Orders (VO)
-              </th>
-              <th rowspan="2" class="px-3.5 py-2.5 text-center border-r border-slate-200 uppercase tracking-wider text-[11px] bg-rose-100/70 text-rose-900 w-52">
-                Issues Need to Attend
-              </th>
-              <th rowspan="2" class="px-3 py-2.5 text-center uppercase tracking-wider text-[11px] bg-slate-100 w-24 no-print">
-                Actions
-              </th>
-            </tr>
-            <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 divide-x divide-slate-200">
-              <th class="px-3.5 py-2 whitespace-nowrap">Contract No & Engineer</th>
-              <th class="px-3.5 py-2 min-w-[200px]">Description</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">Contract Sum</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">P. Sum</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">Contingencies</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">Advance Payment</th>
-              <th class="px-3.5 py-2 whitespace-nowrap">IPC No</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">IPC Amount</th>
-              <th class="px-3.5 py-2 min-w-[170px] text-right whitespace-nowrap">Total Paid & Progress</th>
-              <th class="px-3.5 py-2 whitespace-nowrap">VO Number</th>
-              <th class="px-3.5 py-2 whitespace-nowrap">VO Nature</th>
-              <th class="px-3.5 py-2 text-right whitespace-nowrap">VO Amount</th>
-              <th class="px-3.5 py-2 min-w-[180px]">VO Description</th>
-            </tr>
-          </thead>
-
-          <!-- Table Body Dynamic Render Target -->
-          <tbody id="contractsTableBody" class="divide-y divide-slate-200">
-            <!-- Rendered dynamically by JavaScript -->
-          </tbody>
-
-        </table>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Add / Edit Contract Modal -->
-  <div id="contractModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden place-items-center p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 my-8 flex flex-col max-h-[92vh] overflow-hidden">
-      
-      <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 flex items-center justify-center">
-            <i class="ph-bold ph-pencil-simple text-lg"></i>
-          </div>
-          <div>
-            <h3 id="modalTitle" class="text-base font-bold text-slate-900">Add New Contract</h3>
-            <p class="text-xs text-slate-500">Configure contract particulars, IPC bills, and variation orders</p>
-          </div>
-        </div>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 p-1 rounded-lg">
-          <i class="ph-bold ph-x text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Modal Body (Scrollable) -->
-      <div class="p-6 overflow-y-auto flex-1 space-y-6">
-        <form id="contractForm" onsubmit="handleFormSubmit(event)">
-          <input type="hidden" id="editIndex" value="-1" />
-
-          <!-- 1. Contract Particulars Section -->
-          <div>
-            <div class="flex items-center gap-2 mb-3 pb-1 border-b border-slate-200">
-              <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Contract Particulars</h4>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Number *</label>
-                <input type="text" id="contractNoInput" required placeholder="e.g. CEDE/M&E/2026/01" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Chief Engineer In-Charge *</label>
-                <select id="engineerInput" required class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
-                  <option value="Eng. Rasika">Eng. Rasika</option>
-                  <option value="Eng. Oshani">Eng. Oshani</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Sum (LKR) *</label>
-                <input type="number" step="0.01" id="contractSumInput" required placeholder="0.00" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono" />
-              </div>
-
-              <div class="sm:col-span-2 md:col-span-3">
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Contract Description *</label>
-                <input type="text" id="contractDescInput" required placeholder="Scope of works or project title" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">P. Sum Amount (LKR)</label>
-                <input type="number" step="0.01" id="pSumInput" placeholder="0.00" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Contingencies Amount (LKR)</label>
-                <input type="number" step="0.01" id="contingenciesInput" placeholder="0.00" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono" />
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Advance Payment Disbursed (LKR)</label>
-                <input type="number" step="0.01" id="advancePaymentInput" oninput="calculateModalTotals()" placeholder="0.00" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono" />
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Current Payment Stage (Multiple IPCs) Section -->
-          <div class="pt-2">
-            <div class="flex items-center justify-between mb-3 pb-1 border-b border-slate-200">
-              <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">2</span>
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Interim Payment Certificates (IPCs)</h4>
-              </div>
-              <button type="button" onclick="addIpcRow()" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition">
-                <i class="ph-bold ph-plus text-xs"></i>
-                <span>+ Add IPC Bill</span>
-              </button>
-            </div>
-
-            <!-- IPC Rows Container -->
-            <div id="ipcRowsContainer" class="space-y-2.5">
-              <!-- Dynamically populated -->
-            </div>
-
-            <!-- Real-time Disbursed Calculation summary -->
-            <div class="mt-2.5 bg-blue-50/70 border border-blue-100 rounded-lg p-2.5 flex flex-wrap items-center justify-between text-xs text-blue-900">
-              <div class="flex items-center gap-3">
-                <span>Total Certified IPCs: <strong id="modalTotalIpcText" class="font-mono">Rs. 0.00</strong></span>
-                <span>•</span>
-                <span>Cumulative Disbursed: <strong id="modalTotalDisbursedText" class="font-mono">Rs. 0.00</strong></span>
-              </div>
-              <span class="text-[11px] text-blue-700 font-medium">(Advance + All IPCs)</span>
-            </div>
-          </div>
-
-          <!-- 3. Variation Orders (Multiple VOs) Section -->
-          <div class="pt-2">
-            <div class="flex items-center justify-between mb-3 pb-1 border-b border-slate-200">
-              <div class="flex items-center gap-2">
-                <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center">3</span>
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Variation Orders (VOs)</h4>
-              </div>
-              <button type="button" onclick="addVoRow()" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg transition">
-                <i class="ph-bold ph-plus text-xs"></i>
-                <span>+ Add VO</span>
-              </button>
-            </div>
-
-            <!-- VO Rows Container -->
-            <div id="voRowsContainer" class="space-y-2.5">
-              <!-- Dynamically populated -->
-            </div>
-
-            <!-- Real-time VO Total calculation summary -->
-            <div class="mt-2.5 bg-amber-50/70 border border-amber-100 rounded-lg p-2.5 flex items-center justify-between text-xs text-amber-900">
-              <span>Total Variation Exposure: <strong id="modalTotalVoText" class="font-mono">Rs. 0.00</strong></span>
-              <span class="text-[11px] text-amber-700 font-medium">Net adjustments to contract scope</span>
-            </div>
-          </div>
-
-          <!-- 4. Issues Need to Attend Section -->
-          <div class="pt-2">
-            <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-200">
-              <span class="w-5 h-5 rounded-full bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center">4</span>
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-700">Issues Need to Attend</h4>
-            </div>
-            <textarea 
-              id="issuesInput" 
-              rows="2" 
-              placeholder="e.g. Awaiting bill submission, pending CE signature, site access bottleneck..." 
-              class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:outline-none"
-            ></textarea>
-          </div>
-
-        </form>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-        <span class="text-[11px] text-slate-500 italic">* Changes will be automatically synced to Google Sheets</span>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">
-            Cancel
-          </button>
-          <button type="submit" form="contractForm" class="px-5 py-2 text-xs font-semibold text-white bg-brand-800 hover:bg-brand-700 rounded-lg shadow-sm">
-            Save Contract
-          </button>
-        </div>
-      </div>
-
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="flex items-center gap-2 bg-slate-100 border rounded-lg px-3 py-1.5"><i id="dot" class="dot bg-slate-400"></i><span id="stText">Local only</span></span>
+      <button onclick="pull(true)" class="px-3 py-1.5 bg-white border rounded-lg hover:bg-slate-50">Pull</button>
+      <button onclick="push(true)" class="px-3 py-1.5 bg-white border rounded-lg hover:bg-slate-50">Push</button>
+      <button onclick="exportCSV()" class="px-3 py-1.5 bg-white border rounded-lg hover:bg-slate-50">Export CSV</button>
+      <button onclick="openSettings()" class="px-3 py-1.5 bg-white border rounded-lg hover:bg-slate-50">Settings</button>
+      <button onclick="openModal(-1)" class="px-3.5 py-1.5 bg-blue-800 text-white font-semibold rounded-lg hover:bg-blue-700">+ Add Contract</button>
     </div>
   </div>
+</header>
 
-  <!-- Settings Modal (Web App URL Configuration) -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden place-items-center p-4">
-    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <h3 class="text-sm font-bold text-slate-900">Google Apps Script Connection</h3>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 p-1">
-          <i class="ph-bold ph-x text-base"></i>
-        </button>
+<main class="max-w-[1700px] mx-auto px-4 py-5">
+  <section class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+    <div class="bg-white border rounded-xl p-4"><p class="text-slate-500 font-semibold uppercase">Contracts</p><p id="kCount" class="text-2xl font-bold">0</p><p id="kEng" class="text-slate-500"></p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-slate-500 font-semibold uppercase">Contract Sum</p><p id="kSum" class="text-xl font-bold">0.00</p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-slate-500 font-semibold uppercase">Total Disbursed</p><p id="kPaid" class="text-xl font-bold">0.00</p><p id="kIpc" class="text-slate-500"></p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-slate-500 font-semibold uppercase">Total Variations</p><p id="kVo" class="text-xl font-bold">0.00</p></div>
+    <div class="bg-white border rounded-xl p-4"><p class="text-slate-500 font-semibold uppercase">Issues to Attend</p><p id="kIss" class="text-2xl font-bold text-rose-600">0</p></div>
+  </section>
+
+  <div class="bg-white border rounded-xl p-3 mb-3 flex flex-wrap items-center gap-3 no-print">
+    <input id="q" oninput="render()" placeholder="Search contract, description, IPC, VO, issues..." class="flex-1 min-w-[220px] px-3 py-1.5 border rounded-lg bg-slate-50">
+    <select id="fEng" onchange="render()" class="px-2 py-1.5 border rounded-lg bg-slate-50"><option value="">All engineers</option><option>Eng. Rasika</option><option>Eng. Oshani</option></select>
+    <select id="fVo" onchange="render()" class="px-2 py-1.5 border rounded-lg bg-slate-50"><option value="">All VO natures</option><option>Work</option><option>Omission</option><option>SSR</option><option>Addl. Work</option></select>
+    <span id="cnt" class="text-slate-500"></span>
+  </div>
+
+  <div class="bg-white border rounded-xl overflow-x-auto">
+    <table class="w-full text-left border-collapse">
+      <thead class="bg-slate-100 text-slate-600 uppercase text-[11px]">
+        <tr class="border-b">
+          <th class="p-3">Contract / Engineer</th><th class="p-3 min-w-[200px]">Description</th>
+          <th class="p-3 text-right">Contract Sum</th><th class="p-3 text-right">P. Sum</th><th class="p-3 text-right">Contingencies</th><th class="p-3 text-right">Advance</th>
+          <th class="p-3 min-w-[230px] bg-blue-50">IPCs</th><th class="p-3 min-w-[170px] bg-blue-50">Total Paid</th>
+          <th class="p-3 min-w-[260px] bg-amber-50">Variation Orders</th><th class="p-3 min-w-[180px] bg-rose-50">Issues</th><th class="p-3 no-print">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody" class="divide-y"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Contract modal -->
+<div id="modal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-start justify-center p-4 overflow-y-auto">
+  <form id="form" onsubmit="save(event)" class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl my-6">
+    <div class="px-6 py-4 border-b flex justify-between items-center"><h3 id="mTitle" class="text-base font-bold">Add Contract</h3><button type="button" onclick="closeModal()" class="text-xl text-slate-400 hover:text-slate-800">&times;</button></div>
+    <div class="p-6 space-y-5">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label>Contract No *<input id="fNo" required class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
+        <label>Chief Engineer *<select id="fEngIn" class="w-full mt-1 px-2 py-1.5 border rounded-lg bg-white"><option>Eng. Rasika</option><option>Eng. Oshani</option></select></label>
+        <label>Contract Sum (LKR) *<input id="fSum" type="number" step="0.01" min="0" required class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
+        <label class="sm:col-span-3">Description *<input id="fDesc" required class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
+        <label>P. Sum<input id="fPs" type="number" step="0.01" class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
+        <label>Contingencies<input id="fCont" type="number" step="0.01" class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
+        <label>Advance Payment<input id="fAdv" type="number" step="0.01" oninput="totals()" class="w-full mt-1 px-2 py-1.5 border rounded-lg"></label>
       </div>
-      <div class="p-6 space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1">Apps Script Web App Executable URL:</label>
-          <input 
-            type="url" 
-            id="settingsScriptUrl" 
-            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none" 
-            placeholder="https://script.google.com/macros/s/.../exec"
-          />
-          <p class="text-[11px] text-slate-500 mt-1">This Web App URL connects your browser dashboard directly to your active Google Sheet.</p>
-        </div>
+
+      <div>
+        <div class="flex justify-between items-center border-b pb-1 mb-2"><b class="uppercase text-blue-800">Interim Payment Certificates</b><button type="button" onclick="addIpc()" class="text-blue-700 font-semibold">+ Add IPC</button></div>
+        <div id="ipcs" class="space-y-2"></div>
+        <p class="mt-2 bg-blue-50 rounded-lg p-2">IPC total: <b id="tIpc">0.00</b> &nbsp;•&nbsp; Disbursed (advance + IPCs): <b id="tPaid">0.00</b></p>
       </div>
-      <div class="px-6 py-3.5 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
-        <button onclick="closeSettingsModal()" class="px-4 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
-        <button onclick="saveSettings()" class="px-4 py-1.5 text-xs font-semibold text-white bg-brand-800 hover:bg-brand-700 rounded-lg">Save URL</button>
+
+      <div>
+        <div class="flex justify-between items-center border-b pb-1 mb-2"><b class="uppercase text-amber-800">Variation Orders</b><button type="button" onclick="addVo()" class="text-amber-700 font-semibold">+ Add VO</button></div>
+        <div id="vos" class="space-y-2"></div>
+        <p class="mt-2 bg-amber-50 rounded-lg p-2">VO total: <b id="tVo">0.00</b> <span class="text-slate-500">(use a negative amount for omissions)</span></p>
       </div>
+
+      <label class="block">Issues to attend<textarea id="fIss" rows="2" class="w-full mt-1 px-2 py-1.5 border rounded-lg"></textarea></label>
     </div>
-  </div>
-
-  <!-- Custom In-App Confirmation Modal (Zero Native Alerts) -->
-  <div id="confirmDialog" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden place-items-center p-4">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
-      <div class="flex items-start gap-3">
-        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-          <i class="ph-bold ph-trash text-xl"></i>
-        </div>
-        <div>
-          <h4 id="confirmTitle" class="text-sm font-bold text-slate-900">Delete Contract Entry?</h4>
-          <p id="confirmMessage" class="text-xs text-slate-500 mt-1">Are you sure you want to delete this contract? This will immediately sync and remove the rows from the Google Sheet.</p>
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-2 pt-2">
-        <button id="confirmCancelBtn" class="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
-        <button id="confirmOkBtn" class="px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg">Delete</button>
-      </div>
+    <div class="px-6 py-3 border-t bg-slate-50 flex justify-end gap-2 rounded-b-2xl">
+      <button type="button" onclick="closeModal()" class="px-4 py-2 bg-white border rounded-lg">Cancel</button>
+      <button class="px-5 py-2 bg-blue-800 text-white font-semibold rounded-lg">Save Contract</button>
     </div>
+  </form>
+</div>
+
+<!-- Settings modal -->
+<div id="setModal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white w-full max-w-lg rounded-2xl p-6 space-y-3">
+    <h3 class="text-sm font-bold">Google Apps Script Web App URL</h3>
+    <input id="urlIn" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3 py-2 border rounded-lg font-mono">
+    <p class="text-slate-500">Leave empty to work offline (data stays in this browser).</p>
+    <div class="flex justify-end gap-2"><button onclick="closeSettings()" class="px-4 py-1.5 border rounded-lg">Cancel</button><button onclick="saveSettings()" class="px-4 py-1.5 bg-blue-800 text-white font-semibold rounded-lg">Save</button></div>
   </div>
+</div>
 
-  <!-- Floating Toast Message Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl border border-slate-800 text-xs font-medium flex items-center gap-2 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none">
-    <i id="toastIcon" class="ph-bold ph-check-circle text-emerald-400 text-base"></i>
-    <span id="toastMessage">Success</span>
+<!-- Delete confirm -->
+<div id="delModal" class="fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white w-full max-w-md rounded-2xl p-6 space-y-4">
+    <p id="delMsg" class="text-sm"></p>
+    <div class="flex justify-end gap-2"><button onclick="hide('delModal')" class="px-4 py-1.5 border rounded-lg">Cancel</button><button id="delOk" class="px-4 py-1.5 bg-rose-600 text-white font-semibold rounded-lg">Delete</button></div>
   </div>
+</div>
 
-  <script>
-    // Configured Active Google Apps Script Web App Endpoint
-    const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw51Xz7F_9v9aTHTIzidFYJIxGWa5lfvHNk-fRDKwW6tCl5XSii_CCU8IigRfg6TFU7/exec";
-    let SCRIPT_URL = localStorage.getItem('cede_script_url') || DEFAULT_SCRIPT_URL;
+<div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl opacity-0 pointer-events-none transition-opacity"></div>
 
-    // Default Seed Data structured exactly like Google Sheet
-    const DEFAULT_DATA = [
-      {
-        contractNo: "CEDE/M&E/2026/01",
-        engineer: "Eng. Rasika",
-        description: "Supply, Delivery, and Installation of 2 Nos. High-Lift Centrifugal Pumps at Intake",
-        contractSum: 15400000,
-        pSum: 500000,
-        contingencies: 750000,
-        advancePayment: 3080000,
-        ipcs: [
-          { ipcNo: "IPC-01", ipcAmount: 4500000, ipcRemarks: "Delivery of Pump Sets" },
-          { ipcNo: "IPC-02", ipcAmount: 2250000, ipcRemarks: "Installation & Mechanical Alignment" }
-        ],
-        variations: [
-          { voNo: "VO-01", voNature: "Addl. Work", voAmount: 420000, voDesc: "Extra suction piping & accessories" },
-          { voNo: "VO-02", voNature: "SSR", voAmount: 180000, voDesc: "Rate revision for cast iron fittings" }
-        ],
-        issues: "Awaiting final testing certificate from CE"
-      },
-      {
-        contractNo: "CEDE/M&E/2026/02",
-        engineer: "Eng. Oshani",
-        description: "Rehabilitation of Chemical Dosing & Automatic Chlorination System at WTP",
-        contractSum: 8200000,
-        pSum: 300000,
-        contingencies: 400000,
-        advancePayment: 1640000,
-        ipcs: [
-          { ipcNo: "IPC-01", ipcAmount: 2100000, ipcRemarks: "Chlorinator supply certified" }
-        ],
-        variations: [
-          { voNo: "VO-01", voNature: "Work", voAmount: 250000, voDesc: "Emergency scrubber pipe rerouting" }
-        ],
-        issues: "Contractor requested 14 days extension of time"
-      }
-    ];
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => parseFloat(String(v ?? '').replace(/,/g, '')) || 0;
+const fmt = v => num(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const show = id => { $(id).classList.remove('hidden'); $(id).classList.add('flex'); };
+const hide = id => { $(id).classList.add('hidden'); $(id).classList.remove('flex'); };
 
-    // State Variables
-    let contracts = JSON.parse(localStorage.getItem('cede_contracts_data')) || DEFAULT_DATA;
-    let autoSyncEnabled = true;
-    let autoSyncTimer = null;
-    let isSyncing = false;
-    let isModalOpen = false;
-    let lastDataHash = ""; // Prevents unnecessary DOM re-rendering
+const BAKED = "<?= apiUrl ?>";   // filled in by Apps Script when hosted
+const FALLBACK_URL = "https://script.google.com/macros/s/AKfycbygXcENMLMijDPGspx8002TC74gffAN0tSw1L0yo4iLkcbOtcCcXpVwxLbNVMamHQSV/exec";
+const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+let url = BAKED.startsWith('http') ? BAKED : (ls.get('cede_url') || FALLBACK_URL);
+let contracts = [];
+try { contracts = JSON.parse(ls.get('cede_data') || '[]'); } catch (e) {}
+let dirty = false, busy = false, modalOpen = false, editIdx = -1, lastHash = '';
 
-    function formatLKR(val) {
-      if (val === undefined || val === null || val === "" || isNaN(val)) return "0.00";
-      return Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function toast(msg, err) {
+  const t = $('toast'); t.textContent = msg; t.style.background = err ? '#be123c' : '#0f172a'; t.style.opacity = 1;
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.style.opacity = 0, 3200);
+}
+function status(text, color) {
+  $('stText').textContent = text;
+  $('dot').style.background = {green:'#10b981', amber:'#f59e0b', red:'#e11d48', gray:'#94a3b8'}[color] || '#94a3b8';
+}
+function saveLocal() { ls.set('cede_data', JSON.stringify(contracts)); }
+
+/* ---------- Sync ---------- */
+async function push(manual) {
+  if (!url) { if (manual) openSettings(); return; }
+  if (busy) { setTimeout(() => push(manual), 500); return; }
+  busy = true; status('Pushing...', 'amber');
+  try {
+    const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({action: 'sync', contracts}) });
+    const j = await res.json();
+    if (j.status !== 'success') throw new Error(j.message || 'Unknown error');
+    dirty = false; lastHash = JSON.stringify(contracts);
+    status('Synced', 'green'); if (manual) toast('Google Sheet updated');
+  } catch (e) {
+    console.error(e); status('Push failed - will retry', 'red'); if (manual) toast('Push failed: ' + e.message, true);
+  } finally { busy = false; }
+}
+
+async function pull(manual) {
+  if (!url) { if (manual) openSettings(); return; }
+  if (busy || modalOpen) return;
+  if (dirty) { if (manual) toast('Unsynced changes - push first', true); return; }
+  busy = true; if (manual) status('Pulling...', 'amber');
+  try {
+    const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'api=1&ts=' + Date.now());
+    const j = await res.json();
+    if (j.status !== 'success' || !Array.isArray(j.contracts)) throw new Error(j.message || 'Bad response');
+    const h = JSON.stringify(j.contracts);
+    if (h !== lastHash && !dirty) { contracts = j.contracts; lastHash = h; saveLocal(); render(); }
+    status('Synced', 'green'); if (manual) toast('Loaded latest data from sheet');
+  } catch (e) {
+    console.error(e); status('Offline / cached', 'gray'); if (manual) toast('Pull failed: ' + e.message, true);
+  } finally { busy = false; }
+}
+
+function markDirty() { dirty = true; saveLocal(); render(); clearTimeout(markDirty.t); markDirty.t = setTimeout(() => push(false), 400); }
+
+setInterval(() => {
+  if (!url || document.hidden || modalOpen) return;
+  dirty ? push(false) : pull(false);
+}, 10000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !dirty) pull(false); });
+
+/* ---------- Render ---------- */
+function totalsOf(c) {
+  const ipc = (c.ipcs || []).reduce((s, i) => s + num(i.ipcAmount), 0);
+  const vo = (c.variations || []).reduce((s, v) => s + num(v.voAmount), 0);
+  return { ipc, vo, paid: num(c.advancePayment) + ipc };
+}
+
+function render() {
+  const q = $('q').value.toLowerCase().trim(), fe = $('fEng').value, fv = $('fVo').value;
+  const tb = $('tbody'); tb.innerHTML = '';
+  let shown = 0;
+
+  contracts.forEach((c, idx) => {
+    const hay = [c.contractNo, c.engineer, c.description, c.issues,
+      ...(c.ipcs || []).flatMap(i => [i.ipcNo, i.ipcRemarks]),
+      ...(c.variations || []).flatMap(v => [v.voNo, v.voDesc])].join(' ').toLowerCase();
+    if (q && !hay.includes(q)) return;
+    if (fe && c.engineer !== fe) return;
+    if (fv && !(c.variations || []).some(v => v.voNature === fv)) return;
+    shown++;
+
+    const t = totalsOf(c), sum = num(c.contractSum);
+    const pct = sum > 0 ? t.paid / sum * 100 : 0;
+    const bar = pct > 100 ? '#e11d48' : pct >= 85 ? '#f59e0b' : pct >= 50 ? '#2563eb' : '#10b981';
+    const ipcHtml = (c.ipcs || []).length ? c.ipcs.map(i => `<div class="flex justify-between gap-3 py-0.5"><span><b class="text-blue-800">${esc(i.ipcNo)}</b> <span class="text-slate-400">${esc(i.ipcRemarks)}</span></span><span class="font-mono">${fmt(i.ipcAmount)}</span></div>`).join('') : '<span class="text-slate-400 italic">None</span>';
+    const voHtml = (c.variations || []).length ? c.variations.map(v => `<div class="py-0.5"><div class="flex justify-between gap-3"><span><b>${esc(v.voNo)}</b> <span class="px-1.5 rounded bg-amber-50 border border-amber-200 text-amber-800">${esc(v.voNature)}</span></span><span class="font-mono">${fmt(v.voAmount)}</span></div><div class="text-slate-500">${esc(v.voDesc)}</div></div>`).join('') : '<span class="text-slate-400 italic">None</span>';
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 align-top';
+    tr.innerHTML = `
+      <td class="p-3 whitespace-nowrap"><div class="font-bold">${esc(c.contractNo)}</div><div class="text-slate-500">${esc(c.engineer)}</div></td>
+      <td class="p-3">${esc(c.description)}</td>
+      <td class="p-3 text-right font-mono font-semibold">${fmt(c.contractSum)}</td>
+      <td class="p-3 text-right font-mono">${fmt(c.pSum)}</td>
+      <td class="p-3 text-right font-mono">${fmt(c.contingencies)}</td>
+      <td class="p-3 text-right font-mono">${fmt(c.advancePayment)}</td>
+      <td class="p-3 bg-blue-50/40">${ipcHtml}</td>
+      <td class="p-3 bg-blue-50/40"><div class="text-right font-mono font-bold text-blue-900">${fmt(t.paid)}</div>
+        <div class="mt-1 h-2 bg-slate-200 rounded-full overflow-hidden"><div class="h-2" style="width:${Math.min(pct,100)}%;background:${bar}"></div></div>
+        <div class="text-right mt-0.5" style="color:${bar}">${pct.toFixed(1)}%${pct > 100 ? ' (over)' : ''}</div></td>
+      <td class="p-3 bg-amber-50/40">${voHtml}</td>
+      <td class="p-3">${c.issues ? `<div class="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800">${esc(c.issues)}</div>` : '<span class="text-slate-400 italic">None</span>'}</td>
+      <td class="p-3 whitespace-nowrap no-print"><button onclick="openModal(${idx})" class="px-2 py-1 border rounded hover:bg-slate-100">Edit</button> <button onclick="askDelete(${idx})" class="px-2 py-1 border rounded text-rose-600 hover:bg-rose-50">Delete</button></td>`;
+    tb.appendChild(tr);
+  });
+
+  if (!shown) tb.innerHTML = '<tr><td colspan="11" class="p-10 text-center text-slate-400">No contracts found. Click <b>+ Add Contract</b> to create one.</td></tr>';
+  $('cnt').textContent = `Showing ${shown} of ${contracts.length}`;
+  kpis();
+}
+
+function kpis() {
+  let sum = 0, paid = 0, vo = 0, iss = 0, ipcN = 0, r = 0, o = 0;
+  contracts.forEach(c => {
+    const t = totalsOf(c);
+    sum += num(c.contractSum); paid += t.paid; vo += t.vo; ipcN += (c.ipcs || []).length;
+    if (c.issues && c.issues.trim()) iss++;
+    c.engineer === 'Eng. Oshani' ? o++ : r++;
+  });
+  $('kCount').textContent = contracts.length; $('kEng').textContent = `Rasika: ${r} • Oshani: ${o}`;
+  $('kSum').textContent = 'Rs. ' + fmt(sum); $('kPaid').textContent = 'Rs. ' + fmt(paid);
+  $('kIpc').textContent = `Advance + ${ipcN} IPCs`; $('kVo').textContent = 'Rs. ' + fmt(vo); $('kIss').textContent = iss;
+}
+
+/* ---------- Modal ---------- */
+function addIpc(no, amt, rem) {
+  const n = $('ipcs').children.length + 1, d = document.createElement('div');
+  d.className = 'ipc flex items-center gap-2 bg-slate-50 p-2 rounded-lg border';
+  d.innerHTML = `<input class="i-no w-24 px-2 py-1 border rounded font-semibold" value="${esc(no || 'IPC-' + String(n).padStart(2, '0'))}">
+    <input type="number" step="0.01" oninput="totals()" class="i-amt flex-1 px-2 py-1 border rounded font-mono" placeholder="Amount" value="${esc(amt ?? '')}">
+    <input class="i-rem flex-1 px-2 py-1 border rounded" placeholder="Remarks" value="${esc(rem || '')}">
+    <button type="button" onclick="this.parentElement.remove();totals()" class="px-2 text-rose-600">&times;</button>`;
+  $('ipcs').appendChild(d); totals();
+}
+function addVo(no, nat, amt, desc) {
+  const n = $('vos').children.length + 1, d = document.createElement('div');
+  d.className = 'vo flex items-center gap-2 bg-slate-50 p-2 rounded-lg border';
+  const opts = ['Work', 'Omission', 'SSR', 'Addl. Work'].map(o => `<option ${o === (nat || 'Work') ? 'selected' : ''}>${o}</option>`).join('');
+  d.innerHTML = `<input class="v-no w-24 px-2 py-1 border rounded font-semibold" value="${esc(no || 'VO-' + String(n).padStart(2, '0'))}">
+    <select class="v-nat w-28 px-2 py-1 border rounded bg-white">${opts}</select>
+    <input type="number" step="0.01" oninput="totals()" class="v-amt flex-1 px-2 py-1 border rounded font-mono" placeholder="Amount" value="${esc(amt ?? '')}">
+    <input class="v-desc flex-1 px-2 py-1 border rounded" placeholder="Description" value="${esc(desc || '')}">
+    <button type="button" onclick="this.parentElement.remove();totals()" class="px-2 text-rose-600">&times;</button>`;
+  $('vos').appendChild(d); totals();
+}
+function totals() {
+  const ipc = [...document.querySelectorAll('.i-amt')].reduce((s, e) => s + num(e.value), 0);
+  const vo = [...document.querySelectorAll('.v-amt')].reduce((s, e) => s + num(e.value), 0);
+  $('tIpc').textContent = fmt(ipc); $('tPaid').textContent = fmt(ipc + num($('fAdv').value)); $('tVo').textContent = fmt(vo);
+}
+function openModal(idx) {
+  editIdx = idx; modalOpen = true;
+  $('form').reset(); $('ipcs').innerHTML = ''; $('vos').innerHTML = '';
+  const c = idx >= 0 ? contracts[idx] : null;
+  $('mTitle').textContent = c ? 'Edit Contract' : 'Add Contract';
+  if (c) {
+    $('fNo').value = c.contractNo; $('fEngIn').value = c.engineer || 'Eng. Rasika'; $('fSum').value = c.contractSum;
+    $('fDesc').value = c.description; $('fPs').value = c.pSum || ''; $('fCont').value = c.contingencies || '';
+    $('fAdv').value = c.advancePayment || ''; $('fIss').value = c.issues || '';
+    (c.ipcs || []).forEach(i => addIpc(i.ipcNo, i.ipcAmount, i.ipcRemarks));
+    (c.variations || []).forEach(v => addVo(v.voNo, v.voNature, v.voAmount, v.voDesc));
+  }
+  totals(); show('modal');
+}
+function closeModal() { modalOpen = false; hide('modal'); }
+
+function save(e) {
+  e.preventDefault();
+  const no = $('fNo').value.trim();
+  if (contracts.some((c, i) => i !== editIdx && c.contractNo.toLowerCase() === no.toLowerCase())) return toast('Contract number already exists', true);
+  const ipcs = [...document.querySelectorAll('.ipc')].map(r => ({ ipcNo: r.querySelector('.i-no').value.trim(), ipcAmount: num(r.querySelector('.i-amt').value), ipcRemarks: r.querySelector('.i-rem').value.trim() }))
+    .filter(i => i.ipcNo || i.ipcAmount || i.ipcRemarks);
+  const variations = [...document.querySelectorAll('.vo')].map(r => ({ voNo: r.querySelector('.v-no').value.trim(), voNature: r.querySelector('.v-nat').value, voAmount: num(r.querySelector('.v-amt').value), voDesc: r.querySelector('.v-desc').value.trim() }))
+    .filter(v => v.voNo || v.voAmount || v.voDesc);
+  const obj = { contractNo: no, engineer: $('fEngIn').value, description: $('fDesc').value.trim(), contractSum: num($('fSum').value),
+    pSum: num($('fPs').value), contingencies: num($('fCont').value), advancePayment: num($('fAdv').value), ipcs, variations, issues: $('fIss').value.trim() };
+  editIdx >= 0 ? contracts[editIdx] = obj : contracts.push(obj);
+  closeModal(); toast(editIdx >= 0 ? 'Contract updated' : 'Contract added'); markDirty();
+}
+function askDelete(idx) {
+  $('delMsg').textContent = `Delete "${contracts[idx].contractNo}" with all its IPCs and VOs? This will also remove it from the Google Sheet.`;
+  $('delOk').onclick = () => { hide('delModal'); contracts.splice(idx, 1); toast('Contract deleted'); markDirty(); };
+  show('delModal');
+}
+
+/* ---------- Settings & export ---------- */
+function openSettings() { $('urlIn').value = url; show('setModal'); }
+function closeSettings() { hide('setModal'); }
+function saveSettings() {
+  url = $('urlIn').value.trim(); ls.set('cede_url', url); closeSettings();
+  if (!url) { status('Local only', 'gray'); return toast('Working offline'); }
+  toast('URL saved'); lastHash = ''; contracts.length && !dirty ? pull(true) : pull(true);
+}
+function exportCSV() {
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Contract No','Engineer','Description','Contract Sum','P. Sum','Contingencies','Advance','IPC No','IPC Amount','IPC Remarks','Total Paid','Paid %','VO No','VO Nature','VO Amount','VO Description','Issues']];
+  contracts.forEach(c => {
+    const t = totalsOf(c), n = Math.max((c.ipcs || []).length, (c.variations || []).length, 1);
+    for (let i = 0; i < n; i++) {
+      const p = (c.ipcs || [])[i] || {}, v = (c.variations || [])[i] || {}, f = i === 0;
+      rows.push([q(c.contractNo), q(c.engineer), q(c.description), f ? c.contractSum : '', f ? c.pSum : '', f ? c.contingencies : '', f ? c.advancePayment : '',
+        q(p.ipcNo), p.ipcAmount ?? '', q(p.ipcRemarks), f ? t.paid : '', f ? (num(c.contractSum) ? (t.paid / num(c.contractSum) * 100).toFixed(1) + '%' : '0%') : '',
+        q(v.voNo), q(v.voNature), v.voAmount ?? '', q(v.voDesc), f ? q(c.issues) : '']);
     }
-
-    function calculateDataHash(data) {
-      return JSON.stringify(data);
-    }
-
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMessage');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toastMsg.innerText = msg;
-      if (isError) {
-        toastIcon.className = "ph-bold ph-warning text-rose-400 text-base";
-      } else {
-        toastIcon.className = "ph-bold ph-check-circle text-emerald-400 text-base";
-      }
-
-      toast.classList.remove('translate-y-16', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-
-      setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-16', 'opacity-0');
-      }, 3500);
-    }
-
-    function saveLocal() {
-      localStorage.setItem('cede_contracts_data', JSON.stringify(contracts));
-    }
-
-    function updateKPIs() {
-      let totalContracts = contracts.length;
-      let countRasika = 0;
-      let countOshani = 0;
-      let totalSum = 0;
-      let totalDisbursed = 0;
-      let totalVO = 0;
-      let openIssues = 0;
-      let totalIpcCount = 0;
-
-      contracts.forEach(c => {
-        if (c.engineer === "Eng. Oshani") countOshani++;
-        else countRasika++;
-
-        totalSum += Number(c.contractSum) || 0;
-        
-        let contractIpcSum = 0;
-        if (c.ipcs && Array.isArray(c.ipcs)) {
-          c.ipcs.forEach(ipc => {
-            contractIpcSum += Number(ipc.ipcAmount) || 0;
-            if (Number(ipc.ipcAmount) > 0) totalIpcCount++;
-          });
-        }
-        totalDisbursed += (Number(c.advancePayment) || 0) + contractIpcSum;
-
-        if (c.variations && Array.isArray(c.variations)) {
-          c.variations.forEach(vo => {
-            totalVO += Number(vo.voAmount) || 0;
-          });
-        }
-
-        if (c.issues && c.issues.trim() !== "") openIssues++;
-      });
-
-      document.getElementById('statTotalContracts').innerText = totalContracts;
-      document.getElementById('statEngineerRatio').innerText = `Rasika: ${countRasika} • Oshani: ${countOshani}`;
-      document.getElementById('statTotalSum').innerText = `Rs. ${formatLKR(totalSum)}`;
-      document.getElementById('statTotalDisbursed').innerText = `Rs. ${formatLKR(totalDisbursed)}`;
-      document.getElementById('statDisbursedSub').innerText = `Adv + ${totalIpcCount} IPCs certified`;
-      document.getElementById('statTotalVO').innerText = `Rs. ${formatLKR(totalVO)}`;
-      document.getElementById('statOpenIssues').innerText = openIssues;
-    }
-
-    function renderTable() {
-      const q = document.getElementById('searchInput').value.toLowerCase().trim();
-      const engFilter = document.getElementById('engineerFilter').value;
-      const voFilter = document.getElementById('voFilter').value;
-      const tbody = document.getElementById('contractsTableBody');
-      tbody.innerHTML = '';
-
-      let visibleCount = 0;
-
-      contracts.forEach((c, index) => {
-        // Search Matching Logic
-        const matchSearch = !q || 
-          (c.contractNo && c.contractNo.toLowerCase().includes(q)) ||
-          (c.engineer && c.engineer.toLowerCase().includes(q)) ||
-          (c.description && c.description.toLowerCase().includes(q)) ||
-          (c.issues && c.issues.toLowerCase().includes(q)) ||
-          (c.ipcs && c.ipcs.some(i => (i.ipcNo && i.ipcNo.toLowerCase().includes(q)) || (i.ipcRemarks && i.ipcRemarks.toLowerCase().includes(q)))) ||
-          (c.variations && c.variations.some(v => (v.voNo && v.voNo.toLowerCase().includes(q)) || (v.voDesc && v.voDesc.toLowerCase().includes(q))));
-
-        const matchEng = !engFilter || c.engineer === engFilter;
-        const matchVO = !voFilter || (c.variations && c.variations.some(v => v.voNature === voFilter));
-
-        if (!matchSearch || !matchEng || !matchVO) return;
-
-        visibleCount++;
-
-        // Calculate IPC Total & Total Paid
-        let ipcSum = 0;
-        (c.ipcs || []).forEach(i => { ipcSum += Number(i.ipcAmount) || 0; });
-        const totalPaid = (Number(c.advancePayment) || 0) + ipcSum;
-        const contractSumVal = Number(c.contractSum) || 0;
-
-        // Calculate Utilization % against Contract Sum
-        const utilPct = contractSumVal > 0 ? (totalPaid / contractSumVal) * 100 : 0;
-        const clampedPct = Math.min(Math.max(utilPct, 0), 100);
-
-        let progressColor = "bg-emerald-500";
-        let statusBadge = `<span class="text-[10px] font-semibold text-emerald-700">${utilPct.toFixed(1)}%</span>`;
-        if (utilPct > 100) {
-          progressColor = "bg-rose-500";
-          statusBadge = `<span class="px-1 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-700">${utilPct.toFixed(1)}% (Over)</span>`;
-        } else if (utilPct >= 85) {
-          progressColor = "bg-amber-500";
-          statusBadge = `<span class="text-[10px] font-semibold text-amber-700">${utilPct.toFixed(1)}%</span>`;
-        } else if (utilPct >= 50) {
-          progressColor = "bg-blue-600";
-          statusBadge = `<span class="text-[10px] font-semibold text-blue-700">${utilPct.toFixed(1)}%</span>`;
-        }
-
-        // Determine Chief Engineer Badge Styling
-        const engBadge = c.engineer === "Eng. Oshani" 
-          ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Eng. Oshani</span>`
-          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">Eng. Rasika</span>`;
-
-        // Format separated IPC No and IPC Amount columns
-        let ipcNosHtml = '';
-        let ipcAmountsHtml = '';
-        if (c.ipcs && c.ipcs.length > 0) {
-          ipcNosHtml = c.ipcs.map(ipc => `
-            <div class="py-1 flex items-center gap-1 font-semibold text-blue-800">
-              <span>${ipc.ipcNo || 'IPC'}</span>
-              ${ipc.ipcRemarks ? `<span class="text-[10px] text-slate-400 font-normal truncate max-w-[80px]" title="${ipc.ipcRemarks}">(${ipc.ipcRemarks})</span>` : ''}
-            </div>
-          `).join('');
-
-          ipcAmountsHtml = c.ipcs.map(ipc => `
-            <div class="py-1 font-mono text-slate-800 text-right font-medium">
-              ${formatLKR(ipc.ipcAmount)}
-            </div>
-          `).join('');
-        } else {
-          ipcNosHtml = `<span class="text-slate-400 text-[11px] italic">-</span>`;
-          ipcAmountsHtml = `<span class="text-slate-400 text-[11px] italic text-right">0.00</span>`;
-        }
-
-        // Format Variation Orders column display
-        let voNosHtml = '';
-        let voNaturesHtml = '';
-        let voAmountsHtml = '';
-        let voDescsHtml = '';
-
-        if (c.variations && c.variations.length > 0) {
-          voNosHtml = c.variations.map(v => `<div class="py-0.5 font-semibold text-slate-700">${v.voNo || '-'}</div>`).join('');
-          voNaturesHtml = c.variations.map(v => `
-            <div class="py-0.5">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                ${v.voNature || 'VO'}
-              </span>
-            </div>
-          `).join('');
-          voAmountsHtml = c.variations.map(v => `<div class="py-0.5 font-mono text-slate-700 text-right">${formatLKR(v.voAmount)}</div>`).join('');
-          voDescsHtml = c.variations.map(v => `<div class="py-0.5 text-slate-500 truncate max-w-[200px]" title="${v.voDesc || ''}">${v.voDesc || '-'}</div>`).join('');
-        } else {
-          voNosHtml = `<span class="text-slate-400 italic">-</span>`;
-          voNaturesHtml = `<span class="text-slate-400 italic">-</span>`;
-          voAmountsHtml = `<span class="text-slate-400 italic text-right">0.00</span>`;
-          voDescsHtml = `<span class="text-slate-400 italic">-</span>`;
-        }
-
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50/80 transition-colors divide-x divide-slate-200";
-        tr.innerHTML = `
-          <!-- Contract No & Engineer -->
-          <td class="px-3.5 py-3 whitespace-nowrap">
-            <div class="font-bold text-slate-900">${c.contractNo || '-'}</div>
-            <div class="mt-1 flex items-center gap-1.5">
-              ${engBadge}
-              <span class="text-[10px] text-slate-400 font-medium">${(c.ipcs || []).length} IPCs • ${(c.variations || []).length} VOs</span>
-            </div>
-          </td>
-
-          <!-- Description -->
-          <td class="px-3.5 py-3">
-            <div class="text-slate-800 font-medium line-clamp-2" title="${c.description || ''}">${c.description || '-'}</div>
-          </td>
-
-          <!-- Contract Sum -->
-          <td class="px-3.5 py-3 text-right font-mono font-semibold text-slate-900 whitespace-nowrap">
-            ${formatLKR(c.contractSum)}
-          </td>
-
-          <!-- P. Sum -->
-          <td class="px-3.5 py-3 text-right font-mono text-slate-600 whitespace-nowrap">
-            ${formatLKR(c.pSum)}
-          </td>
-
-          <!-- Contingencies -->
-          <td class="px-3.5 py-3 text-right font-mono text-slate-600 whitespace-nowrap">
-            ${formatLKR(c.contingencies)}
-          </td>
-
-          <!-- Advance Payment -->
-          <td class="px-3.5 py-3 text-right font-mono text-slate-700 whitespace-nowrap bg-blue-50/20">
-            ${formatLKR(c.advancePayment)}
-          </td>
-
-          <!-- IPC No Column -->
-          <td class="px-3.5 py-3 whitespace-nowrap bg-blue-50/20">
-            ${ipcNosHtml}
-          </td>
-
-          <!-- IPC Amount Column -->
-          <td class="px-3.5 py-3 text-right whitespace-nowrap bg-blue-50/20">
-            ${ipcAmountsHtml}
-          </td>
-
-          <!-- Total Paid & Completion Progress Bar -->
-          <td class="px-3.5 py-3 bg-blue-50/40">
-            <div class="text-right font-mono font-bold text-blue-900 whitespace-nowrap">
-              ${formatLKR(totalPaid)}
-            </div>
-            <div class="mt-1.5 w-full bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner">
-              <div class="h-2 rounded-full transition-all duration-300 ${progressColor}" style="width: ${clampedPct}%"></div>
-            </div>
-            <div class="flex items-center justify-between mt-1">
-              <span class="text-[10px] text-slate-400 font-medium">Progress</span>
-              ${statusBadge}
-            </div>
-          </td>
-
-          <!-- VO No -->
-          <td class="px-3.5 py-3 whitespace-nowrap bg-amber-50/30">
-            ${voNosHtml}
-          </td>
-
-          <!-- VO Nature -->
-          <td class="px-3.5 py-3 whitespace-nowrap bg-amber-50/30">
-            ${voNaturesHtml}
-          </td>
-
-          <!-- VO Amount -->
-          <td class="px-3.5 py-3 whitespace-nowrap bg-amber-50/30">
-            ${voAmountsHtml}
-          </td>
-
-          <!-- VO Description -->
-          <td class="px-3.5 py-3 bg-amber-50/30">
-            ${voDescsHtml}
-          </td>
-
-          <!-- Issues Need to Attend -->
-          <td class="px-3.5 py-3">
-            ${c.issues 
-              ? `<div class="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] leading-snug" title="${c.issues}">${c.issues}</div>` 
-              : `<span class="text-slate-400 text-[11px] italic">None</span>`}
-          </td>
-
-          <!-- Actions -->
-          <td class="px-3 py-3 text-center whitespace-nowrap no-print">
-            <div class="inline-flex items-center gap-1">
-              <button onclick="editContract(${index})" class="p-1 text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded transition" title="Edit Contract">
-                <i class="ph-bold ph-pencil-simple text-sm"></i>
-              </button>
-              <button onclick="confirmDeleteContract(${index})" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition" title="Delete Contract">
-                <i class="ph-bold ph-trash text-sm"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      if (visibleCount === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="14" class="px-6 py-12 text-center text-slate-400">
-              <i class="ph-bold ph-folder-open text-3xl mb-2 text-slate-300 block"></i>
-              <span>No matching contract records found. Click <strong>+ Add Contract</strong> to create a new entry.</span>
-            </td>
-          </tr>
-        `;
-      }
-
-      document.getElementById('recordCountText').innerText = `Showing ${visibleCount} of ${contracts.length} contracts`;
-      updateKPIs();
-    }
-
-    function addIpcRow(ipcNo = '', ipcAmount = '', ipcRemarks = '') {
-      const container = document.getElementById('ipcRowsContainer');
-      const idx = container.children.length + 1;
-      const row = document.createElement('div');
-      row.className = "flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 ipc-row";
-      row.innerHTML = `
-        <div class="w-24">
-          <input type="text" placeholder="IPC-${idx}" value="${ipcNo || `IPC-${idx}`}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-semibold text-blue-800 ipc-no-input" />
-        </div>
-        <div class="flex-1">
-          <input type="number" step="0.01" oninput="calculateModalTotals()" placeholder="Amount (LKR)" value="${ipcAmount !== '' ? ipcAmount : ''}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-mono ipc-amount-input" />
-        </div>
-        <div class="flex-1">
-          <input type="text" placeholder="Remarks (e.g. Pump delivery)" value="${ipcRemarks || ''}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded ipc-remarks-input" />
-        </div>
-        <button type="button" onclick="this.parentElement.remove(); calculateModalTotals();" class="p-1 text-slate-400 hover:text-rose-600 rounded">
-          <i class="ph-bold ph-trash text-sm"></i>
-        </button>
-      `;
-      container.appendChild(row);
-      calculateModalTotals();
-    }
-
-    function addVoRow(voNo = '', voNature = 'Work', voAmount = '', voDesc = '') {
-      const container = document.getElementById('voRowsContainer');
-      const idx = container.children.length + 1;
-      const row = document.createElement('div');
-      row.className = "flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200 vo-row";
-      row.innerHTML = `
-        <div class="w-24">
-          <input type="text" placeholder="VO-${idx}" value="${voNo || `VO-${idx}`}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-semibold text-amber-800 vo-no-input" />
-        </div>
-        <div class="w-28">
-          <select class="w-full px-2 py-1 text-xs border border-slate-300 rounded bg-white vo-nature-input">
-            <option value="Work" ${voNature === 'Work' ? 'selected' : ''}>Work</option>
-            <option value="Omission" ${voNature === 'Omission' ? 'selected' : ''}>Omission</option>
-            <option value="SSR" ${voNature === 'SSR' ? 'selected' : ''}>SSR</option>
-            <option value="Addl. Work" ${voNature === 'Addl. Work' ? 'selected' : ''}>Addl. Work</option>
-          </select>
-        </div>
-        <div class="flex-1">
-          <input type="number" step="0.01" oninput="calculateModalTotals()" placeholder="VO Amount (LKR)" value="${voAmount !== '' ? voAmount : ''}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded font-mono vo-amount-input" />
-        </div>
-        <div class="flex-1">
-          <input type="text" placeholder="Description" value="${voDesc || ''}" class="w-full px-2 py-1 text-xs border border-slate-300 rounded vo-desc-input" />
-        </div>
-        <button type="button" onclick="this.parentElement.remove(); calculateModalTotals();" class="p-1 text-slate-400 hover:text-rose-600 rounded">
-          <i class="ph-bold ph-trash text-sm"></i>
-        </button>
-      `;
-      container.appendChild(row);
-      calculateModalTotals();
-    }
-
-    function calculateModalTotals() {
-      // IPC total
-      let ipcTotal = 0;
-      document.querySelectorAll('#ipcRowsContainer .ipc-amount-input').forEach(input => {
-        ipcTotal += parseFloat(input.value) || 0;
-      });
-      const adv = parseFloat(document.getElementById('advancePaymentInput').value) || 0;
-      const totalDisbursed = adv + ipcTotal;
-
-      document.getElementById('modalTotalIpcText').innerText = `Rs. ${formatLKR(ipcTotal)}`;
-      document.getElementById('modalTotalDisbursedText').innerText = `Rs. ${formatLKR(totalDisbursed)}`;
-
-      // VO total
-      let voTotal = 0;
-      document.querySelectorAll('#voRowsContainer .vo-amount-input').forEach(input => {
-        voTotal += parseFloat(input.value) || 0;
-      });
-      document.getElementById('modalTotalVoText').innerText = `Rs. ${formatLKR(voTotal)}`;
-    }
-
-    function openModal(editIdx = -1) {
-      isModalOpen = true;
-      document.getElementById('editIndex').value = editIdx;
-      document.getElementById('ipcRowsContainer').innerHTML = '';
-      document.getElementById('voRowsContainer').innerHTML = '';
-
-      if (editIdx >= 0) {
-        const c = contracts[editIdx];
-        document.getElementById('modalTitle').innerText = "Edit Contract Record";
-        document.getElementById('contractNoInput').value = c.contractNo || '';
-        document.getElementById('engineerInput').value = c.engineer || 'Eng. Rasika';
-        document.getElementById('contractDescInput').value = c.description || '';
-        document.getElementById('contractSumInput').value = c.contractSum || '';
-        document.getElementById('pSumInput').value = c.pSum || '';
-        document.getElementById('contingenciesInput').value = c.contingencies || '';
-        document.getElementById('advancePaymentInput').value = c.advancePayment || '';
-        document.getElementById('issuesInput').value = c.issues || '';
-
-        // Prefill IPCs
-        if (c.ipcs && c.ipcs.length > 0) {
-          c.ipcs.forEach(i => addIpcRow(i.ipcNo, i.ipcAmount, i.ipcRemarks));
-        } else {
-          addIpcRow('IPC-01', '', '');
-        }
-
-        // Prefill VOs
-        if (c.variations && c.variations.length > 0) {
-          c.variations.forEach(v => addVoRow(v.voNo, v.voNature, v.voAmount, v.voDesc));
-        } else {
-          addVoRow('VO-01', 'Work', '', '');
-        }
-      } else {
-        document.getElementById('modalTitle').innerText = "Add New Contract";
-        document.getElementById('contractForm').reset();
-        addIpcRow('IPC-01', '', '');
-        addVoRow('VO-01', 'Work', '', '');
-      }
-
-      calculateModalTotals();
-      const modal = document.getElementById('contractModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('grid');
-    }
-
-    function closeModal() {
-      isModalOpen = false;
-      const modal = document.getElementById('contractModal');
-      modal.classList.remove('grid');
-      modal.classList.add('hidden');
-    }
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-      const editIdx = parseInt(document.getElementById('editIndex').value, 10);
-
-      // Collect Multi-IPCs
-      const ipcs = [];
-      document.querySelectorAll('#ipcRowsContainer .ipc-row').forEach(row => {
-        const no = row.querySelector('.ipc-no-input').value.trim();
-        const amt = parseFloat(row.querySelector('.ipc-amount-input').value) || 0;
-        const remarks = row.querySelector('.ipc-remarks-input').value.trim();
-        if (no || amt > 0 || remarks) {
-          ipcs.push({ ipcNo: no, ipcAmount: amt, ipcRemarks: remarks });
-        }
-      });
-
-      // Collect Multi-VOs
-      const variations = [];
-      document.querySelectorAll('#voRowsContainer .vo-row').forEach(row => {
-        const no = row.querySelector('.vo-no-input').value.trim();
-        const nature = row.querySelector('.vo-nature-input').value;
-        const amt = parseFloat(row.querySelector('.vo-amount-input').value) || 0;
-        const desc = row.querySelector('.vo-desc-input').value.trim();
-        if (no || amt > 0 || desc) {
-          variations.push({ voNo: no, voNature: nature, voAmount: amt, voDesc: desc });
-        }
-      });
-
-      const contractObj = {
-        contractNo: document.getElementById('contractNoInput').value.trim(),
-        engineer: document.getElementById('engineerInput').value,
-        description: document.getElementById('contractDescInput').value.trim(),
-        contractSum: parseFloat(document.getElementById('contractSumInput').value) || 0,
-        pSum: parseFloat(document.getElementById('pSumInput').value) || 0,
-        contingencies: parseFloat(document.getElementById('contingenciesInput').value) || 0,
-        advancePayment: parseFloat(document.getElementById('advancePaymentInput').value) || 0,
-        ipcs: ipcs,
-        variations: variations,
-        issues: document.getElementById('issuesInput').value.trim()
-      };
-
-      if (editIdx >= 0) {
-        contracts[editIdx] = contractObj;
-        showToast("Contract entry updated successfully!");
-      } else {
-        contracts.push(contractObj);
-        showToast("New contract added successfully!");
-      }
-
-      saveLocal();
-      closeModal();
-      renderTable();
-
-      // Trigger debounced real-time push to Google Sheets
-      triggerAutoPush();
-    }
-
-    function editContract(idx) {
-      openModal(idx);
-    }
-
-    function confirmDeleteContract(idx) {
-      const c = contracts[idx];
-      const dialog = document.getElementById('confirmDialog');
-      document.getElementById('confirmMessage').innerText = `Are you sure you want to delete "${c.contractNo}"? This will sync immediately and remove all associated IPCs and VOs from Google Sheets.`;
-
-      dialog.classList.remove('hidden');
-      dialog.classList.add('grid');
-
-      document.getElementById('confirmCancelBtn').onclick = () => {
-        dialog.classList.remove('grid');
-        dialog.classList.add('hidden');
-      };
-
-      document.getElementById('confirmOkBtn').onclick = () => {
-        dialog.classList.remove('grid');
-        dialog.classList.add('hidden');
-        contracts.splice(idx, 1);
-        saveLocal();
-        renderTable();
-        showToast("Contract deleted.");
-        triggerAutoPush();
-      };
-    }
-
-    let debouncePushTimer = null;
-    function triggerAutoPush() {
-      if (!autoSyncEnabled || !SCRIPT_URL) return;
-      clearTimeout(debouncePushTimer);
-      // Fast debounce: 300ms instead of 800ms
-      debouncePushTimer = setTimeout(() => {
-        pushToSheet(true);
-      }, 300);
-    }
-
-    async function pushToSheet(isAuto = false) {
-      if (!SCRIPT_URL) {
-        openSettingsModal();
-        return;
-      }
-      if (isSyncing) return;
-      isSyncing = true;
-
-      const pushIcon = document.getElementById('pushIcon');
-      if (pushIcon) pushIcon.className = "ph-bold ph-spinner animate-spin text-sm";
-      setSyncStatus("Pushing...", "amber");
-
-      try {
-        const payload = {
-          action: "sync",
-          contracts: contracts
-        };
-
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await res.json();
-        if (result.status === "success") {
-          lastDataHash = calculateDataHash(contracts);
-          setSyncStatus("Live Synced", "emerald");
-          if (!isAuto) showToast("Google Sheet updated successfully!");
-        } else {
-          setSyncStatus("Sync Retry", "amber");
-        }
-      } catch (err) {
-        console.error("Error during push:", err);
-        setSyncStatus("Offline / Cached", "slate");
-      } finally {
-        if (pushIcon) pushIcon.className = "ph-bold ph-cloud-arrow-up text-sm";
-        isSyncing = false;
-      }
-    }
-
-    async function pullFromSheet(isAuto = false) {
-      if (!SCRIPT_URL || isSyncing || isModalOpen) return;
-      isSyncing = true;
-
-      const pullIcon = document.getElementById('pullIcon');
-      if (!isAuto && pullIcon) {
-        pullIcon.className = "ph-bold ph-spinner animate-spin text-sm";
-        setSyncStatus("Pulling...", "blue");
-      }
-
-      try {
-        const res = await fetch(SCRIPT_URL + "?ts=" + Date.now());
-        const json = await res.json();
-
-        if (json.status === "success" && Array.isArray(json.data) && json.data.length > 2) {
-          const rawRows = json.data.slice(2); // Skip 2 merged header rows
-          const parsedContracts = [];
-          let currentContract = null;
-
-          rawRows.forEach(row => {
-            const contractNo = (row[0] || '').toString().trim();
-            const engineer = (row[1] || 'Eng. Rasika').toString().trim();
-            const desc = (row[2] || '').toString().trim();
-
-            if (contractNo !== '') {
-              // New parent contract row
-              currentContract = {
-                contractNo: contractNo,
-                engineer: engineer,
-                description: desc,
-                contractSum: parseFloat(row[3]) || 0,
-                pSum: parseFloat(row[4]) || 0,
-                contingencies: parseFloat(row[5]) || 0,
-                advancePayment: parseFloat(row[6]) || 0,
-                ipcs: [],
-                variations: [],
-                issues: (row[13] || row[12] || '').toString().trim()
-              };
-              parsedContracts.push(currentContract);
-            }
-
-            if (currentContract) {
-              const rawIpcNo = (row[7] || '').toString().trim();
-              let rawIpcAmt = row[8];
-              let ipcRemarks = '';
-
-              if (rawIpcNo.includes(':') && (rawIpcAmt === '' || rawIpcAmt === undefined)) {
-                const parts = rawIpcNo.split(':');
-                const parsedNo = parts[0].trim();
-                let parsedAmt = 0;
-                if (parts[1]) {
-                  const amtMatch = parts[1].match(/[\d,.]+/);
-                  if (amtMatch) parsedAmt = parseFloat(amtMatch[0].replace(/,/g, '')) || 0;
-                  const remarkMatch = parts[1].match(/\((.*?)\)/);
-                  if (remarkMatch) ipcRemarks = remarkMatch[1].trim();
-                }
-                currentContract.ipcs.push({ ipcNo: parsedNo, ipcAmount: parsedAmt, ipcRemarks: ipcRemarks });
-              } else if (rawIpcNo !== '' || (parseFloat(rawIpcAmt) > 0)) {
-                const amtVal = parseFloat(rawIpcAmt) || 0;
-                currentContract.ipcs.push({ ipcNo: rawIpcNo || 'IPC', ipcAmount: amtVal, ipcRemarks: '' });
-              }
-
-              let voNo = (row[9] || '').toString().trim();
-              let voNature = (row[10] || '').toString().trim();
-              let voAmt = parseFloat(row[11]) || 0;
-              let voDesc = (row[12] || '').toString().trim();
-
-              if (!voNo && row[8] && isNaN(row[8])) {
-                voNo = (row[8] || '').toString().trim();
-                voNature = (row[9] || '').toString().trim();
-                voAmt = parseFloat(row[10]) || 0;
-                voDesc = (row[11] || '').toString().trim();
-              }
-
-              if (voNo || voAmt > 0 || voDesc) {
-                currentContract.variations.push({
-                  voNo: voNo || 'VO',
-                  voNature: voNature || 'Work',
-                  voAmount: voAmt,
-                  voDesc: voDesc
-                });
-              }
-            }
-          });
-
-          if (parsedContracts.length > 0) {
-            const newHash = calculateDataHash(parsedContracts);
-            // Smart update: Only re-render if data has actually changed
-            if (newHash !== lastDataHash) {
-              lastDataHash = newHash;
-              contracts = parsedContracts;
-              saveLocal();
-              renderTable();
-            }
-          }
-
-          setSyncStatus("Live Synced", "emerald");
-          if (!isAuto) showToast("Synchronized latest data from Google Sheet!");
-        }
-      } catch (err) {
-        console.error("Error pulling sheet:", err);
-      } finally {
-        if (pullIcon) pullIcon.className = "ph-bold ph-arrows-clockwise text-sm";
-        isSyncing = false;
-      }
-    }
-
-    function setSyncStatus(text, color) {
-      const indicator = document.getElementById('syncIndicator');
-      const statusText = document.getElementById('syncStatusText');
-      const timeText = document.getElementById('syncTimeText');
-
-      if (statusText) statusText.innerText = text;
-      const now = new Date();
-      if (timeText) timeText.innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      if (indicator) indicator.className = `w-2.5 h-2.5 rounded-full live-pulse bg-${color}-500`;
-    }
-
-    function toggleAutoSync() {
-      autoSyncEnabled = !autoSyncEnabled;
-      const btn = document.getElementById('toggleAutoSyncBtn');
-      if (autoSyncEnabled) {
-        btn.innerText = "Pause";
-        startAutoSync();
-        showToast("Real-time auto sync resumed.");
-      } else {
-        btn.innerText = "Resume";
-        clearInterval(autoSyncTimer);
-        setSyncStatus("Auto-Sync Paused", "amber");
-        showToast("Auto sync paused.");
-      }
-    }
-
-    function startAutoSync() {
-      clearInterval(autoSyncTimer);
-      // Fast 4-second background poll for real-time responsiveness
-      autoSyncTimer = setInterval(() => {
-        if (autoSyncEnabled && !isModalOpen && !document.hidden) {
-          pullFromSheet(true);
-        }
-      }, 4000);
-    }
-
-    // Refresh immediately whenever user returns to the tab
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && autoSyncEnabled && !isModalOpen) {
-        pullFromSheet(true);
-      }
-    });
-
-    function exportCSV() {
-      const headers = [
-        "Contract Number", "Chief Engineer", "Contract Description", "Contract Sum", "P. Sum Amount", 
-        "Contingencies Amount", "Advance Payment", "IPC No", "IPC Amount", "Total Disbursed", "Disbursed %", 
-        "VO Number", "VO Nature", "VO Amount", "VO Description", "Issues Need to Attend"
-      ];
-
-      const rows = [];
-      contracts.forEach(c => {
-        const ipcs = (c.ipcs && c.ipcs.length > 0) ? c.ipcs : [{ ipcNo: '', ipcAmount: '', ipcRemarks: '' }];
-        const vos = (c.variations && c.variations.length > 0) ? c.variations : [{ voNo: '', voNature: '', voAmount: '', voDesc: '' }];
-        const maxLines = Math.max(ipcs.length, vos.length);
-
-        let totalIpc = 0;
-        (c.ipcs || []).forEach(i => { totalIpc += Number(i.ipcAmount) || 0; });
-        const totalPaid = (Number(c.advancePayment) || 0) + totalIpc;
-        const contractSum = Number(c.contractSum) || 0;
-        const pct = contractSum > 0 ? ((totalPaid / contractSum) * 100).toFixed(1) + "%" : "0.0%";
-
-        for (let i = 0; i < maxLines; i++) {
-          const ipc = ipcs[i] || { ipcNo: '', ipcAmount: '', ipcRemarks: '' };
-          const vo = vos[i] || { voNo: '', voNature: '', voAmount: '', voDesc: '' };
-
-          rows.push([
-            `"${(c.contractNo || '').replace(/"/g, '""')}"`,
-            `"${(c.engineer || 'Eng. Rasika').replace(/"/g, '""')}"`,
-            `"${(c.description || '').replace(/"/g, '""')}"`,
-            i === 0 ? (c.contractSum || 0) : '',
-            i === 0 ? (c.pSum || 0) : '',
-            i === 0 ? (c.contingencies || 0) : '',
-            i === 0 ? (c.advancePayment || 0) : '',
-            `"${(ipc.ipcNo || '').replace(/"/g, '""')}"`,
-            ipc.ipcAmount !== undefined && ipc.ipcAmount !== '' ? ipc.ipcAmount : '',
-            i === 0 ? totalPaid : '',
-            i === 0 ? `"${pct}"` : '',
-            `"${(vo.voNo || '').replace(/"/g, '""')}"`,
-            `"${(vo.voNature || '').replace(/"/g, '""')}"`,
-            vo.voAmount !== undefined ? vo.voAmount : '',
-            `"${(vo.voDesc || '').replace(/"/g, '""')}"`,
-            i === 0 ? `"${(c.issues || '').replace(/"/g, '""')}"` : ''
-          ]);
-        }
-      });
-
-      const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(r => r.join(','))].join("\r\n");
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `CEDE_Budget_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast("CSV file generated and downloaded.");
-    }
-
-    function openSettingsModal() {
-      document.getElementById('settingsScriptUrl').value = SCRIPT_URL;
-      const modal = document.getElementById('settingsModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('grid');
-    }
-
-    function closeSettingsModal() {
-      const modal = document.getElementById('settingsModal');
-      modal.classList.remove('grid');
-      modal.classList.add('hidden');
-    }
-
-    function saveSettings() {
-      const newUrl = document.getElementById('settingsScriptUrl').value.trim();
-      SCRIPT_URL = newUrl;
-      localStorage.setItem('cede_script_url', newUrl);
-      closeSettingsModal();
-      showToast("Apps Script URL updated.");
-      pullFromSheet();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      renderTable();
-      startAutoSync();
-      // Initial background pull
-      setTimeout(() => { pullFromSheet(true); }, 800);
-    });
-  </script>
+  });
+  const blob = new Blob(['\uFEFF' + rows.map(r => r.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `CEDE_Budget_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast('CSV downloaded');
+}
+
+/* ---------- Init ---------- */
+status(url ? 'Connecting...' : 'Local only', url ? 'amber' : 'gray');
+render();
+if (url) pull(true);
+</script>
 </body>
 </html>

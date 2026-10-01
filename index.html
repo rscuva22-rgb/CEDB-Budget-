@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CEDE Budget & Payment Tracker Pro</title>
+  <title>CEDE Budget & Payment Tracker Pro - Enterprise Edition</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -16,6 +16,25 @@
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+              950: '#0f172a',
+            }
+          },
+          boxShadow: {
+            'glow-blue': '0 0 20px -3px rgba(37, 99, 235, 0.25)',
+            'glow-amber': '0 0 20px -3px rgba(245, 158, 11, 0.25)',
+            'glow-rose': '0 0 20px -3px rgba(225, 29, 72, 0.25)',
+            'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+            'elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04)',
           }
         }
       }
@@ -26,111 +45,169 @@
     .font-mono { font-family: 'JetBrains Mono', monospace; }
     .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     
-    /* Scrollbar aesthetics */
+    /* Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+    /* Transitions & Glassmorphism */
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+    }
+    .tab-btn {
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      color: #1e40af;
+      font-weight: 600;
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1d4ed8;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* Print styles for Formal Ledger & Engineering Audit Dossiers */
     @media print {
       .no-print { display: none !important; }
-      body { background: white !important; font-size: 10px !important; }
-      .print-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+      body { background: white !important; color: black !important; font-size: 10px !important; }
+      .print-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; }
       .page-break { page-break-after: always; }
+      .print-only { display: block !important; }
+      .print-compact { padding: 4px 6px !important; }
     }
+    .print-only { display: none; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 text-xs min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900">
+<body class="bg-slate-100/70 text-slate-800 text-xs min-h-screen flex flex-col antialiased selection:bg-blue-100 selection:text-blue-900">
 
-<header class="bg-white border-b border-slate-200 sticky top-0 z-30 no-print shadow-xs">
-  <div class="max-w-[1800px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+<!-- Top Navigation & Global Controls -->
+<header class="glass-nav border-b border-slate-200/90 sticky top-0 z-40 no-print transition-all">
+  <div class="max-w-[1850px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <!-- Brand identity -->
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-blue-800 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-blue-900/20">
-        C
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 text-white flex items-center justify-center font-bold text-lg shadow-glow-blue">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-sm md:text-base font-bold text-slate-900 leading-tight">CEDE Budget & Payment Tracker</h1>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">v2.5 Pro</span>
+          <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">CEDE Budget & Payment Tracker</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200">v3.0 Enterprise</span>
         </div>
-        <p class="text-[11px] text-slate-500">Infrastructure Contract Ledger, IPC Certificates & VO Monitoring</p>
+        <p class="text-[11px] text-slate-500 font-medium">Civil Engineering Contract Ledger • IPC Certifications • VO Analytics</p>
       </div>
     </div>
 
-    <!-- Status & Primary Actions -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Sync Status Indicator -->
-      <div id="statusBadge" class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 transition-all cursor-pointer hover:bg-slate-200/70" onclick="openSettings()" title="Click to configure Google Apps Script Sync">
-        <i id="dot" class="dot bg-slate-400"></i>
-        <span id="stText" class="font-medium">Connecting...</span>
+    <!-- Central Page View Switcher -->
+    <nav class="flex items-center bg-slate-200/70 p-1 rounded-xl border border-slate-300/60 shadow-inner">
+      <button id="navTabLedger" onclick="switchView('ledger')" class="tab-btn active px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Contracts Ledger
+      </button>
+      <button id="navTabReports" onclick="switchView('reports')" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Reports & Analytics Hub
+        <span id="navIssuesBadge" class="hidden px-1.5 py-0.2 rounded-full text-[9px] bg-rose-600 text-white font-bold animate-pulse">0</span>
+      </button>
+    </nav>
+
+    <!-- Cloud Sync & Actions Group -->
+    <div class="flex items-center gap-2">
+      <!-- Sync Status Pill -->
+      <div id="statusBadge" onclick="openSettings()" class="group flex items-center gap-2 bg-white/90 border border-slate-200/90 rounded-lg px-2.5 py-1.5 text-slate-700 transition cursor-pointer hover:border-blue-400 hover:shadow-subtle" title="Click to view cloud sync settings">
+        <span id="dot" class="dot bg-slate-400 group-hover:scale-110 transition-transform"></span>
+        <span id="stText" class="font-medium text-[11px]">Connecting...</span>
       </div>
 
-      <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-        <button onclick="pull(true)" class="px-2.5 py-1 text-slate-700 hover:text-slate-900 hover:bg-white rounded-md transition font-medium flex items-center gap-1.5" title="Pull updates from Google Sheet">
+      <!-- Pull / Push Group -->
+      <div class="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-2xs">
+        <button onclick="pull(true)" class="px-2.5 py-1 text-slate-700 hover:text-blue-700 hover:bg-slate-50 rounded-md transition font-medium flex items-center gap-1" title="Pull updates from cloud spreadsheet">
           <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Pull
         </button>
-        <button onclick="push(true)" class="px-2.5 py-1 text-slate-700 hover:text-slate-900 hover:bg-white rounded-md transition font-medium flex items-center gap-1.5" title="Push changes to Google Sheet">
+        <button onclick="push(true)" class="px-2.5 py-1 text-slate-700 hover:text-blue-700 hover:bg-slate-50 rounded-md transition font-medium flex items-center gap-1" title="Push changes to cloud spreadsheet">
           <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
           Push
         </button>
       </div>
 
-      <div class="h-4 w-px bg-slate-200 mx-0.5"></div>
+      <button onclick="window.print()" class="px-2.5 py-1.5 bg-white border border-slate-200/90 rounded-lg hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1 transition shadow-2xs" title="Print currently active view">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        <span class="hidden sm:inline">Print</span>
+      </button>
 
-      <div class="flex items-center gap-1.5">
-        <button onclick="window.print()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1" title="Print Executive Ledger">
-          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-          Print
-        </button>
-        <button onclick="exportCSV()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1" title="Export as tabular CSV">
-          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          Export
-        </button>
-        <button onclick="openSettings()" class="px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1">
-          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          Settings
-        </button>
-      </div>
+      <button onclick="openSettings()" class="p-1.5 bg-white border border-slate-200/90 rounded-lg hover:bg-slate-50 text-slate-700 transition shadow-2xs" title="Settings">
+        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      </button>
 
-      <button onclick="openModal(-1)" class="px-3.5 py-1.5 bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-800 transition flex items-center gap-1.5 shadow-sm shadow-blue-800/20 active:scale-95">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+      <button onclick="openModal(-1)" class="px-3 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-semibold rounded-lg shadow-sm shadow-blue-800/25 transition flex items-center gap-1.5 active:scale-95">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
         New Contract
       </button>
     </div>
   </div>
 </header>
+<main class="max-w-[1850px] mx-auto px-4 sm:px-6 py-4 flex-1 w-full space-y-4">
+  
+  <!-- Printable Letterhead Header (Appears only on printed documents) -->
+  <div class="print-only border-b-2 border-slate-800 pb-3 mb-4">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-xl font-bold uppercase tracking-tight text-slate-900">Center for Engineering Design & Education (CEDE)</h1>
+        <p class="text-xs text-slate-600">Financial Ledger, Interim Payment Certifications & Contract Audit</p>
+      </div>
+      <div class="text-right text-[10px] text-slate-600">
+        <p>Report Date: <b class="font-mono text-slate-900" id="printReportDate">October 1, 2026</b></p>
+        <p>Currency: Sri Lankan Rupees (LKR / Rs.)</p>
+      </div>
+    </div>
+  </div>
 
-<main class="max-w-[1800px] mx-auto px-4 py-4 flex-1 w-full space-y-4">
-  <!-- Executive KPI Metrics -->
-  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+  <!-- Primary Financial Metrics Grid (Interactive with subtle glow) -->
+  <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-        <span>Total Contracts</span>
+        <span>Portfolio Size</span>
         <span class="p-1 rounded-md bg-blue-50 text-blue-600">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         </span>
       </div>
       <div class="mt-2">
         <p id="kCount" class="text-2xl font-bold text-slate-900 leading-none">0</p>
-        <p id="kEng" class="text-[11px] text-slate-500 mt-1 truncate">Loading distribution...</p>
+        <p id="kEng" class="text-[11px] text-slate-500 mt-1 truncate">Distributing...</p>
       </div>
     </div>
 
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-        <span>Initial Contract Sum</span>
+        <span>Original Contract Sum</span>
         <span class="p-1 rounded-md bg-slate-100 text-slate-600">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         </span>
       </div>
       <div class="mt-2">
-        <p id="kSum" class="text-lg md:text-xl font-bold font-mono text-slate-900 leading-none">0.00</p>
-        <p class="text-[11px] text-slate-400 mt-1">Base commitments</p>
+        <p id="kSum" class="text-base sm:text-lg font-bold font-mono text-slate-900 leading-none">Rs. 0.00</p>
+        <p class="text-[11px] text-slate-400 mt-1">Initial approved commitments</p>
       </div>
     </div>
 
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
         <span>Approved VOs</span>
         <span class="p-1 rounded-md bg-amber-50 text-amber-600">
@@ -138,155 +215,355 @@
         </span>
       </div>
       <div class="mt-2">
-        <p id="kVo" class="text-lg md:text-xl font-bold font-mono text-amber-700 leading-none">0.00</p>
-        <p id="kVoSub" class="text-[11px] text-slate-500 mt-1">Net additions/omissions</p>
+        <p id="kVo" class="text-base sm:text-lg font-bold font-mono text-amber-700 leading-none">Rs. 0.00</p>
+        <p id="kVoSub" class="text-[11px] text-slate-500 mt-1">0 variations registered</p>
       </div>
     </div>
 
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
         <span>Revised Budget</span>
-        <span class="p-1 rounded-md bg-purple-50 text-purple-600">
+        <span class="p-1 rounded-md bg-indigo-50 text-indigo-600">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
         </span>
       </div>
       <div class="mt-2">
-        <p id="kRev" class="text-lg md:text-xl font-bold font-mono text-purple-900 leading-none">0.00</p>
-        <p class="text-[11px] text-slate-400 mt-1">Original + Net VOs</p>
+        <p id="kRev" class="text-base sm:text-lg font-bold font-mono text-indigo-950 leading-none">Rs. 0.00</p>
+        <p class="text-[11px] text-slate-400 mt-1">Net revised ceiling</p>
       </div>
     </div>
 
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
         <span>Total Disbursed</span>
-        <span class="p-1 rounded-md bg-blue-50 text-blue-600">
+        <span class="p-1 rounded-md bg-emerald-50 text-emerald-600">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
         </span>
       </div>
       <div class="mt-2">
-        <p id="kPaid" class="text-lg md:text-xl font-bold font-mono text-blue-800 leading-none">0.00</p>
-        <p id="kIpc" class="text-[11px] text-slate-500 mt-1">Advance + IPCs</p>
+        <p id="kPaid" class="text-base sm:text-lg font-bold font-mono text-emerald-700 leading-none">Rs. 0.00</p>
+        <p id="kIpc" class="text-[11px] text-slate-500 mt-1">Adv + 0 IPCs certified</p>
       </div>
     </div>
 
-    <div class="bg-white border border-slate-200/80 rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
+    <div class="bg-white border border-slate-200/90 rounded-xl p-3.5 shadow-subtle card-hover flex flex-col justify-between">
       <div class="flex items-center justify-between text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-        <span>Issues to Attend</span>
+        <span>Remaining Balance</span>
         <span class="p-1 rounded-md bg-rose-50 text-rose-600">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         </span>
       </div>
-      <div class="mt-2 flex items-baseline justify-between">
-        <p id="kIss" class="text-2xl font-bold text-rose-600 leading-none">0</p>
-        <span id="kBalance" class="text-[10px] font-mono font-medium text-slate-500">Bal: Rs. 0.00</span>
+      <div class="mt-2">
+        <p id="kBalance" class="text-base sm:text-lg font-bold font-mono text-slate-900 leading-none">Rs. 0.00</p>
+        <p id="kIssSub" class="text-[11px] text-rose-600 font-semibold mt-1">0 open issues</p>
       </div>
-      <p class="text-[11px] text-slate-400 mt-1">Requiring immediate action</p>
     </div>
   </section>
+  <!-- ========================================== -->
+  <!-- VIEW 1: CONTRACTS LEDGER                   -->
+  <!-- ========================================== -->
+  <div id="viewLedger" class="space-y-4">
+    <!-- Filter, Search and Sort Toolbelt -->
+    <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 no-print shadow-2xs">
+      <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
+        <!-- Search Field -->
+        <div class="relative flex-1 min-w-[220px]">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </span>
+          <input id="q" oninput="render()" placeholder="Search contract #, engineer, scope, IPCs, VOs, or issues..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs transition">
+        </div>
 
-  <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 no-print shadow-xs">
-    <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-      <!-- Search Input -->
-      <div class="relative flex-1 min-w-[220px]">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        </span>
-        <input id="q" oninput="render()" placeholder="Search contract #, engineer, description, IPC, VO, remarks, or issues..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs transition">
-      </div>
+        <!-- Filter Engineer -->
+        <select id="fEng" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
+          <option value="">All Engineers</option>
+        </select>
 
-      <!-- Filter by Engineer -->
-      <select id="fEng" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
-        <option value="">All Engineers</option>
-      </select>
+        <!-- Filter VO Nature -->
+        <select id="fVo" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
+          <option value="">All VO Types</option>
+          <option value="Work">Work</option>
+          <option value="Omission">Omission</option>
+          <option value="SSR">SSR</option>
+          <option value="Addl. Work">Addl. Work</option>
+        </select>
 
-      <!-- Filter by VO Nature -->
-      <select id="fVo" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
-        <option value="">All VO Natures</option>
-        <option value="Work">Work</option>
-        <option value="Omission">Omission</option>
-        <option value="SSR">SSR</option>
-        <option value="Addl. Work">Addl. Work</option>
-      </select>
-
-      <!-- Filter by Financial Status -->
-      <select id="fStatus" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
-        <option value="">All Budget Status</option>
-        <option value="over">Over Budget (>100%)</option>
-        <option value="near">Warning (85% - 100%)</option>
-        <option value="safe">Healthy (< 85%)</option>
-        <option value="issues">Has Open Issues</option>
-      </select>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <!-- Sort selection -->
-      <div class="flex items-center gap-1.5 text-slate-500">
-        <span class="text-[11px] font-medium">Sort:</span>
-        <select id="sortField" onchange="render()" class="px-2 py-1 border border-slate-200 rounded-md bg-white text-slate-700 text-[11px] focus:outline-none cursor-pointer">
-          <option value="default">Original Order</option>
-          <option value="contractNo">Contract No</option>
-          <option value="sumDesc">Contract Sum (High → Low)</option>
-          <option value="paidDesc">Disbursed (High → Low)</option>
-          <option value="pctDesc">% Paid (High → Low)</option>
-          <option value="balanceDesc">Remaining Balance</option>
+        <!-- Filter Financial / Issue Status -->
+        <select id="fStatus" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
+          <option value="">All Financial Health</option>
+          <option value="over">Over Budget (>100%)</option>
+          <option value="near">Warning Phase (85% - 100%)</option>
+          <option value="safe">Healthy (< 85%)</option>
+          <option value="issues">Has Active Issues</option>
         </select>
       </div>
 
-      <span id="cnt" class="text-slate-500 font-medium text-[11px] bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
-        Showing 0 of 0
-      </span>
-    </div>
-  </div>
+      <div class="flex items-center gap-3">
+        <!-- Sorter -->
+        <div class="flex items-center gap-1.5 text-slate-500">
+          <span class="text-[11px] font-medium">Sort:</span>
+          <select id="sortField" onchange="render()" class="px-2 py-1 border border-slate-200 rounded-md bg-white text-slate-700 text-[11px] focus:outline-none cursor-pointer">
+            <option value="default">Default Order</option>
+            <option value="contractNo">Contract No</option>
+            <option value="sumDesc">Contract Sum (High → Low)</option>
+            <option value="paidDesc">Disbursed (High → Low)</option>
+            <option value="pctDesc">% Paid (High → Low)</option>
+            <option value="balanceDesc">Remaining Balance (High → Low)</option>
+          </select>
+        </div>
 
-  <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs print-card">
-    <div class="overflow-x-auto max-w-full">
-      <table class="w-full text-left border-collapse min-w-[1280px]">
-        <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200">
-          <tr>
-            <th class="p-3 font-semibold w-[160px]">Contract & Engineer</th>
-            <th class="p-3 font-semibold min-w-[180px]">Description</th>
-            <th class="p-3 font-semibold text-right w-[110px]">Orig. Sum (Rs)</th>
-            <th class="p-3 font-semibold text-right w-[90px]">P. Sum</th>
-            <th class="p-3 font-semibold text-right w-[90px]">Contingency</th>
-            <th class="p-3 font-semibold text-right w-[95px]">Advance</th>
-            <th class="p-3 font-semibold min-w-[240px] bg-blue-50/70 border-x border-blue-100 text-blue-900">Interim Payment Certs (IPCs)</th>
-            <th class="p-3 font-semibold min-w-[170px] bg-blue-50/70 border-r border-blue-100 text-blue-900">Disbursed & %</th>
-            <th class="p-3 font-semibold min-w-[260px] bg-amber-50/70 border-r border-amber-100 text-amber-900">Variation Orders (VOs)</th>
-            <th class="p-3 font-semibold min-w-[140px] text-right">Revised Bal.</th>
-            <th class="p-3 font-semibold min-w-[170px] bg-rose-50/50 text-rose-900">Issues / Notes</th>
-            <th class="p-3 font-semibold text-center w-[100px] no-print">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tbody" class="divide-y divide-slate-100 text-slate-700">
-          <!-- Populated by JavaScript render() -->
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <button onclick="exportCSV()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-1 transition" title="Export current filtered view to CSV">
+          <svg class="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          CSV
+        </button>
 
-  <div id="emptyHint" class="hidden bg-blue-50/80 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 no-print">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">i</div>
-      <div>
-        <h4 class="font-bold text-blue-950 text-xs">No contract records currently loaded!</h4>
-        <p class="text-blue-800 text-[11px]">You can create your first contract or populate with standard sample infrastructure contracts to explore features.</p>
+        <span id="cnt" class="text-slate-500 font-medium text-[11px] bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+          Showing 0 of 0
+        </span>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <button onclick="loadSampleData()" class="px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-medium rounded-lg shadow-xs transition">
-        Load Sample Data
-      </button>
+
+    <!-- Main Contract Ledger Table -->
+    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-subtle print-card">
+      <div class="overflow-x-auto max-w-full">
+        <table class="w-full text-left border-collapse min-w-[1360px]">
+          <thead class="bg-slate-100/90 text-slate-600 uppercase text-[10px] tracking-wider border-b border-slate-200 select-none">
+            <tr>
+              <th class="p-3 font-semibold w-[160px]">Contract & Engineer</th>
+              <th class="p-3 font-semibold min-w-[190px]">Scope Description</th>
+              <th class="p-3 font-semibold text-right w-[110px]">Orig. Sum (Rs)</th>
+              <th class="p-3 font-semibold text-right w-[90px]">P. Sum</th>
+              <th class="p-3 font-semibold text-right w-[90px]">Contingency</th>
+              <th class="p-3 font-semibold text-right w-[95px]">Advance</th>
+              <th class="p-3 font-semibold min-w-[250px] bg-blue-50/70 border-x border-blue-100 text-blue-900">Interim Payment Certs (IPCs)</th>
+              <th class="p-3 font-semibold min-w-[180px] bg-blue-50/70 border-r border-blue-100 text-blue-900">Total Disbursed & %</th>
+              <th class="p-3 font-semibold min-w-[270px] bg-amber-50/70 border-r border-amber-100 text-amber-900">Variation Orders (VOs)</th>
+              <th class="p-3 font-semibold min-w-[140px] text-right">Balance & Revised</th>
+              <th class="p-3 font-semibold min-w-[180px] bg-rose-50/50 text-rose-900">Issues & Status</th>
+              <th class="p-3 font-semibold text-center w-[120px] no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody" class="divide-y divide-slate-100 text-slate-700">
+            <!-- Populated dynamically by render() -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty state hint box -->
+    <div id="emptyHint" class="hidden bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 no-print shadow-subtle">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          i
+        </div>
+        <div>
+          <h4 class="font-bold text-blue-950 text-sm">No engineering contracts loaded yet!</h4>
+          <p class="text-blue-800 text-[11px] mt-0.5">Start by recording your first infrastructure contract, or load standard sample contracts to explore interactive reports and analytics.</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="loadSampleData()" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition active:scale-95">
+          Load Sample Dataset
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ========================================== -->
+  <!-- VIEW 2: REPORTS & ANALYTICS HUB           -->
+  <!-- ========================================== -->
+  <div id="viewReports" class="hidden space-y-5">
+    
+    <!-- Report Header Bar with Controls -->
+    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle flex flex-wrap items-center justify-between gap-3 no-print">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-sm font-bold text-slate-900">Executive Engineering Audit & Reports Center</h2>
+          <p class="text-[11px] text-slate-500">Comprehensive financial health, engineer workload distribution, and variation order impacts.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="exportComprehensiveReportCSV()" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1.5 transition text-xs shadow-2xs">
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export Report (CSV)
+        </button>
+        <button onclick="window.print()" class="px-3.5 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5 text-xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Print Formal Report
+        </button>
+      </div>
+    </div>
+
+    <!-- Report Section 1: Financial Allocation Visualizer & Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <!-- Visual Budget Progress Gauge -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle print-card">
+        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-600"></span> Overall Portfolio Absorption
+        </h3>
+        <div class="flex items-center justify-center py-2">
+          <div class="relative w-40 h-40 flex items-center justify-center">
+            <!-- SVG circular gauge -->
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+              <path class="text-slate-100" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path id="svgProgressCircle" class="text-blue-600 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="repPctDisbursed" class="text-2xl font-bold font-mono text-slate-900">0.0%</span>
+              <span class="text-[10px] text-slate-400 font-medium">Disbursed</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-2 mt-2 pt-3 border-t border-slate-100">
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-500">Cumulative Disbursed:</span>
+            <b id="repSumDisbursed" class="font-mono text-emerald-700">Rs. 0.00</b>
+          </div>
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-500">Committed Portfolio:</span>
+            <b id="repSumRevised" class="font-mono text-slate-900">Rs. 0.00</b>
+          </div>
+          <div class="flex justify-between text-[11px]">
+            <span class="text-slate-500">Remaining Obligation:</span>
+            <b id="repSumBalance" class="font-mono text-blue-900">Rs. 0.00</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- Engineer Workload & Financial Exposure -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle lg:col-span-2 print-card flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-600"></span> Supervising Engineer Workload & Distribution
+          </h3>
+          <p class="text-[11px] text-slate-500 mb-3">Monitoring contract count, cumulative financial value, certified disbursements, and active bottlenecks per engineer.</p>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 uppercase text-[9px] tracking-wider border-y">
+                <tr>
+                  <th class="py-2 px-3">Engineer Name</th>
+                  <th class="py-2 px-3 text-center">Contracts</th>
+                  <th class="py-2 px-3 text-right">Committed Value (Rs)</th>
+                  <th class="py-2 px-3 text-right">Disbursed (Rs)</th>
+                  <th class="py-2 px-3 text-center">Progress %</th>
+                  <th class="py-2 px-3 text-center">Open Issues</th>
+                </tr>
+              </thead>
+              <tbody id="repEngTbody" class="divide-y divide-slate-100 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="text-[10px] text-slate-400 mt-2 italic">
+          * Engineers can be added or updated via the Settings menu at any time.
+        </div>
+      </div>
+    </div>
+    <!-- Report Section 2: Variation Order Audit & Nature Breakdown -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- Variation Orders Breakdown Card -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle print-card">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Variation Orders (VO) Financial Impact
+          </h3>
+          <span id="repVoBadge" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">0 Variations</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mb-3">Categorization of engineering adjustments, scope expansions, SSR adjustments, and omissions.</p>
+
+        <div id="repVoContainer" class="space-y-2">
+          <!-- Dynamic VO Nature cards -->
+        </div>
+      </div>
+
+      <!-- Financial Contingency & Provisional Sums Liquidity -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle print-card">
+        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Provisional Sums (PS) & Contingencies Ledger
+        </h3>
+        <p class="text-[11px] text-slate-500 mb-3">Allocation of risk contingencies and provisional sums across all active infrastructure projects.</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-[10px] text-slate-500 uppercase font-semibold">Total P. Sums Allocated</span>
+            <p id="repTotalPs" class="text-base font-bold font-mono text-slate-800 mt-1">Rs. 0.00</p>
+          </div>
+          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+            <span class="text-[10px] text-slate-500 uppercase font-semibold">Total Contingencies</span>
+            <p id="repTotalCont" class="text-base font-bold font-mono text-slate-800 mt-1">Rs. 0.00</p>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 text-xs text-slate-600">
+          <div class="flex justify-between p-2 bg-slate-50/70 rounded-md">
+            <span>Cumulative Advance Payments:</span>
+            <b id="repTotalAdv" class="font-mono text-slate-900">Rs. 0.00</b>
+          </div>
+          <div class="flex justify-between p-2 bg-slate-50/70 rounded-md">
+            <span>Interim Payment Certificates (IPCs) Value:</span>
+            <b id="repTotalIpcSum" class="font-mono text-slate-900">Rs. 0.00</b>
+          </div>
+          <div class="flex justify-between p-2 bg-blue-50/60 text-blue-950 font-semibold rounded-md border border-blue-200/50">
+            <span>Net Disbursed to Contractors:</span>
+            <b id="repNetDisbursed" class="font-mono text-blue-900">Rs. 0.00</b>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Report Section 3: Critical Issues & Engineering Bottlenecks Dossier -->
+    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-subtle print-card">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-rose-600"></span> Issues to Attend & Engineering Observations Logbook
+        </h3>
+        <span id="repIssuesBadge" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">0 Critical Items</span>
+      </div>
+      <p class="text-[11px] text-slate-500 mb-3">Consolidated matrix of contractor disputes, material approvals, testing cert delays, and variations pending ratification.</p>
+
+      <div id="repIssuesList" class="space-y-2">
+        <!-- Dynamically rendered issues -->
+      </div>
+    </div>
+
+    <!-- Formal Printable Sign-off & Verification Block (Visible when printed) -->
+    <div class="print-only pt-8 mt-8 border-t border-slate-300">
+      <div class="grid grid-cols-3 gap-8 text-center text-xs">
+        <div>
+          <div class="border-b border-slate-400 pb-12 mb-2"></div>
+          <p class="font-bold text-slate-800">Supervising Engineer</p>
+          <p class="text-[10px] text-slate-500">Center for Engineering Design & Education</p>
+        </div>
+        <div>
+          <div class="border-b border-slate-400 pb-12 mb-2"></div>
+          <p class="font-bold text-slate-800">Senior Quantity Surveyor / Project Director</p>
+          <p class="text-[10px] text-slate-500">CEDE Infrastructure Audit Unit</p>
+        </div>
+        <div>
+          <div class="border-b border-slate-400 pb-12 mb-2"></div>
+          <p class="font-bold text-slate-800">Director / Head of Department</p>
+          <p class="text-[10px] text-slate-500">Certified for Executive Review</p>
+        </div>
+      </div>
+      <div class="mt-4 text-center text-[9px] text-slate-400">
+        Confidential engineering & budget document generated via CEDE Ledger System • All figures in LKR unless specified.
+      </div>
     </div>
   </div>
 </main>
-
-<!-- Contract Form Modal -->
+<!-- ======================================================== -->
+<!-- MODAL: CONTRACT CREATE / EDIT                            -->
+<!-- ======================================================== -->
 <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-start justify-center p-3 sm:p-4 overflow-y-auto">
-  <form id="form" onsubmit="save(event)" class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl my-4 sm:my-8 border border-slate-100 overflow-hidden transform transition-all">
+  <form id="form" onsubmit="save(event)" class="bg-white w-full max-w-4xl rounded-2xl shadow-elevated my-4 sm:my-8 border border-slate-100 overflow-hidden transform transition-all">
     <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
       <div>
         <h3 id="mTitle" class="text-base font-bold text-slate-900">Add Contract</h3>
-        <p class="text-[11px] text-slate-500">Provide contract particulars, breakdown, payment certificates, and variation orders.</p>
+        <p class="text-[11px] text-slate-500">Specify contract numbers, supervision, budget allocations, IPCs, and variation orders.</p>
       </div>
       <button type="button" onclick="closeModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-200 flex items-center justify-center transition text-xl">&times;</button>
     </div>
@@ -380,7 +657,7 @@
       <div>
         <label class="block">
           <span class="font-bold uppercase text-[11px] text-slate-600 tracking-wider flex items-center gap-1.5 mb-1">
-            <span class="w-2 h-2 rounded-full bg-rose-600"></span> Issues to Attend & Engineering Remarks
+            <span class="w-2 h-2 rounded-full bg-rose-600"></span> Issues to Attend & Engineering Observations
           </span>
           <textarea id="fIss" rows="2" placeholder="e.g. Awaiting contractor submission of revised bar bending schedule; IPC 03 deduction disputed." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none"></textarea>
         </label>
@@ -399,10 +676,88 @@
     </div>
   </form>
 </div>
+<!-- ======================================================== -->
+<!-- MODAL: SINGLE CONTRACT 360° INSPECTOR                     -->
+<!-- ======================================================== -->
+<div id="viewDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 overflow-y-auto">
+  <div class="bg-white w-full max-w-2xl rounded-2xl p-6 space-y-4 shadow-elevated border border-slate-100 my-6">
+    <div class="flex items-center justify-between border-b pb-3">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+          C
+        </div>
+        <div>
+          <h3 id="detContractNo" class="text-sm font-bold font-mono text-slate-900 leading-tight">Contract Detail</h3>
+          <p id="detEngineer" class="text-[11px] text-slate-500"></p>
+        </div>
+      </div>
+      <button onclick="hide('viewDetailModal')" class="text-slate-400 hover:text-slate-800 text-xl font-bold">&times;</button>
+    </div>
 
-<!-- Settings Modal -->
+    <div class="space-y-4 text-xs">
+      <div>
+        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Scope / Description</span>
+        <p id="detDesc" class="text-slate-800 mt-1 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100"></p>
+      </div>
+
+      <!-- Financial Metrics Pill Matrix -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <span class="text-[10px] text-slate-500 block">Original Sum</span>
+          <b id="detOrigSum" class="font-mono text-slate-900 text-xs">Rs. 0.00</b>
+        </div>
+        <div class="p-2.5 rounded-lg bg-amber-50 border border-amber-200">
+          <span class="text-[10px] text-amber-800 block">Approved VOs</span>
+          <b id="detVoSum" class="font-mono text-amber-900 text-xs">Rs. 0.00</b>
+        </div>
+        <div class="p-2.5 rounded-lg bg-indigo-50 border border-indigo-200">
+          <span class="text-[10px] text-indigo-800 block">Revised Sum</span>
+          <b id="detRevSum" class="font-mono text-indigo-900 text-xs">Rs. 0.00</b>
+        </div>
+        <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200">
+          <span class="text-[10px] text-emerald-800 block">Total Disbursed</span>
+          <b id="detDisbursed" class="font-mono text-emerald-900 text-xs">Rs. 0.00</b>
+        </div>
+      </div>
+
+      <!-- IPCs Breakdown -->
+      <div class="border rounded-xl p-3 bg-blue-50/20">
+        <h4 class="font-bold text-blue-900 text-[11px] uppercase tracking-wider mb-2">Interim Payment Certificates (IPCs)</h4>
+        <div id="detIpcList" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+      </div>
+
+      <!-- Variations Breakdown -->
+      <div class="border rounded-xl p-3 bg-amber-50/20">
+        <h4 class="font-bold text-amber-900 text-[11px] uppercase tracking-wider mb-2">Variation Orders (VOs)</h4>
+        <div id="detVoList" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+      </div>
+
+      <!-- Issues box -->
+      <div id="detIssuesSection" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900">
+        <span class="font-bold text-[11px] flex items-center gap-1.5 text-rose-700 uppercase">
+          <svg class="w-3 h-3 text-rose-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          Active Observations / Bottlenecks
+        </span>
+        <p id="detIssuesText" class="mt-1 leading-snug"></p>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center pt-3 border-t">
+      <button id="detEditBtn" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold rounded-lg text-xs">
+        Edit in Form
+      </button>
+      <button onclick="hide('viewDetailModal')" class="px-4 py-1.5 bg-slate-800 text-white rounded-lg text-xs font-semibold">
+        Close Inspector
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- MODAL: SETTINGS & BACKUP/RESTORE                          -->
+<!-- ======================================================== -->
 <div id="setModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-  <div class="bg-white w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-2xl border border-slate-100">
+  <div class="bg-white w-full max-w-lg rounded-2xl p-6 space-y-4 shadow-elevated border border-slate-100">
     <div class="flex items-center justify-between border-b pb-3">
       <h3 class="text-sm font-bold text-slate-900">Application Configuration & Sync</h3>
       <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-800 text-xl font-bold">&times;</button>
@@ -448,7 +803,7 @@
 
 <!-- Delete Confirmation Modal -->
 <div id="delModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
-  <div class="bg-white w-full max-w-md rounded-2xl p-6 space-y-4 shadow-2xl border border-slate-100">
+  <div class="bg-white w-full max-w-md rounded-2xl p-6 space-y-4 shadow-elevated border border-slate-100">
     <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg mb-1">
       !
     </div>
@@ -465,7 +820,6 @@
 
 <!-- Floating Toast Message Box -->
 <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl opacity-0 pointer-events-none transition-all duration-300 text-xs font-medium flex items-center gap-2 border border-slate-700"></div>
-
 <script>
 /* -------------------------------------------------------------
  * CORE STATE & UTILITIES
@@ -485,7 +839,7 @@ const ls = {
 };
 
 let url = BAKED.startsWith('http') ? BAKED : (ls.get('cede_url') || FALLBACK_URL);
-let engineers = ['Eng. Rasika', 'Eng. Oshani'];
+let engineers = ['Eng. Rasika', 'Eng. Oshani', 'Eng. Jayasuriya'];
 try {
   const storedEng = JSON.parse(ls.get('cede_engineers') || '[]');
   if (Array.isArray(storedEng) && storedEng.length) engineers = storedEng;
@@ -494,6 +848,7 @@ try {
 let contracts = [];
 try { contracts = JSON.parse(ls.get('cede_data') || '[]'); } catch (e) {}
 let dirty = false, busy = false, modalOpen = false, editIdx = -1, lastHash = '';
+let currentView = 'ledger'; // 'ledger' | 'reports'
 
 function toast(msg, err = false) {
   const t = $('toast');
@@ -523,6 +878,22 @@ function saveLocal() {
   ls.set('cede_data', JSON.stringify(contracts));
 }
 
+function switchView(viewName) {
+  currentView = viewName;
+  if (viewName === 'ledger') {
+    $('viewLedger').classList.remove('hidden');
+    $('viewReports').classList.add('hidden');
+    $('navTabLedger').classList.add('active');
+    $('navTabReports').classList.remove('active');
+  } else {
+    $('viewLedger').classList.add('hidden');
+    $('viewReports').classList.remove('hidden');
+    $('navTabLedger').classList.remove('active');
+    $('navTabReports').classList.add('active');
+    renderReports();
+  }
+}
+
 function populateEngineersDropdowns() {
   const fEng = $('fEng');
   const fEngIn = $('fEngIn');
@@ -544,7 +915,6 @@ function populateEngineersDropdowns() {
     fEngIn.appendChild(o2);
   });
 }
-
 /* -------------------------------------------------------------
  * SYNC ENGINE (PULL & PUSH)
  * ----------------------------------------------------------- */
@@ -555,7 +925,7 @@ async function push(manual = false) {
     return;
   }
   if (busy) {
-    if (manual) toast('Sync currently in progress, queuing...', false);
+    if (manual) toast('Sync in progress, queuing push...', false);
     setTimeout(() => push(manual), 600);
     return;
   }
@@ -606,6 +976,7 @@ async function pull(manual = false) {
       lastHash = h;
       saveLocal();
       render();
+      if (currentView === 'reports') renderReports();
     }
     status('Synced with Google Sheet', 'green');
     if (manual) toast('Loaded latest records from Google Sheet');
@@ -622,6 +993,7 @@ function markDirty() {
   dirty = true;
   saveLocal();
   render();
+  if (currentView === 'reports') renderReports();
   clearTimeout(markDirty.t);
   markDirty.t = setTimeout(() => push(false), 500);
 }
@@ -635,7 +1007,6 @@ setInterval(() => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && !dirty) pull(false);
 });
-
 /* -------------------------------------------------------------
  * CALCULATIONS & AGGREGATIONS
  * ----------------------------------------------------------- */
@@ -653,7 +1024,7 @@ function totalsOf(c) {
 }
 
 /* -------------------------------------------------------------
- * VIEW RENDERING
+ * VIEW 1: RENDER CONTRACTS LEDGER
  * ----------------------------------------------------------- */
 function render() {
   const q = $('q').value.toLowerCase().trim();
@@ -666,7 +1037,7 @@ function render() {
 
   let filtered = contracts.map((c, idx) => ({ ...c, _idx: idx, _t: totalsOf(c) }));
 
-  // Search filter
+  // Search filter across all attributes
   if (q) {
     filtered = filtered.filter(c => {
       const hay = [
@@ -755,10 +1126,13 @@ function render() {
       : '<span class="text-slate-400 italic text-[11px]">No Variations</span>';
 
     const tr = document.createElement('tr');
-    tr.className = 'hover:bg-slate-50/80 transition-colors align-top group';
+    tr.className = 'hover:bg-slate-50/90 transition-colors align-top group';
     tr.innerHTML = `
       <td class="p-3 whitespace-nowrap">
-        <div class="font-bold text-slate-900 font-mono text-[12px] group-hover:text-blue-700 transition-colors">${esc(c.contractNo)}</div>
+        <div onclick="inspectContract(${c._idx})" class="font-bold text-slate-900 font-mono text-[12px] group-hover:text-blue-700 transition-colors cursor-pointer flex items-center gap-1">
+          <span>${esc(c.contractNo)}</span>
+          <svg class="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </div>
         <div class="text-slate-500 font-medium text-[11px] flex items-center gap-1 mt-0.5">
           <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           ${esc(c.engineer || 'Unassigned')}
@@ -814,7 +1188,7 @@ function render() {
           ? `<div class="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-900 leading-snug">
                <div class="flex items-center gap-1 font-semibold text-[10px] text-rose-700 mb-0.5">
                  <svg class="w-3 h-3 text-rose-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                 Attention
+                 Attention Required
                </div>
                ${esc(c.issues)}
              </div>`
@@ -824,6 +1198,9 @@ function render() {
 
       <td class="p-3 whitespace-nowrap text-center no-print">
         <div class="flex items-center justify-center gap-1">
+          <button onclick="inspectContract(${c._idx})" class="p-1.5 border border-slate-200 rounded-md hover:bg-slate-100 text-slate-600 hover:text-blue-700 transition" title="Inspect 360 Summary">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
           <button onclick="openModal(${c._idx})" class="p-1.5 border border-slate-200 rounded-md hover:bg-slate-100 text-slate-700 hover:text-blue-700 transition" title="Edit Contract particulars">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
           </button>
@@ -861,7 +1238,7 @@ function render() {
 }
 
 function kpis() {
-  let sum = 0, paid = 0, vo = 0, iss = 0, ipcN = 0;
+  let sum = 0, paid = 0, vo = 0, iss = 0, ipcN = 0, voN = 0;
   const engMap = {};
 
   contracts.forEach(c => {
@@ -870,6 +1247,7 @@ function kpis() {
     paid += t.paid;
     vo += t.vo;
     ipcN += (c.ipcs || []).length;
+    voN += (c.variations || []).length;
     if (c.issues && c.issues.trim()) iss++;
     const eng = c.engineer || 'Unassigned';
     engMap[eng] = (engMap[eng] || 0) + 1;
@@ -880,15 +1258,248 @@ function kpis() {
 
   $('kCount').textContent = contracts.length;
   const engSummary = Object.entries(engMap).map(([name, count]) => `${name.replace('Eng. ', '')}: ${count}`).join(' • ');
-  $('kEng').textContent = engSummary || 'No contracts';
+  $('kEng').textContent = engSummary || 'No contracts assigned';
 
   $('kSum').textContent = 'Rs. ' + fmt(sum);
   $('kPaid').textContent = 'Rs. ' + fmt(paid);
-  $('kIpc').textContent = `Adv + ${ipcN} IPCs`;
-  $('kVo').textContent = (vo >= 0 ? '+' : '') + fmt(vo);
+  $('kIpc').textContent = `Adv + ${ipcN} IPCs certified`;
+  $('kVo').textContent = (vo >= 0 ? '+' : '') + 'Rs. ' + fmt(vo);
+  $('kVoSub').textContent = `${voN} variations recorded`;
   $('kRev').textContent = 'Rs. ' + fmt(rev);
-  $('kIss').textContent = iss;
-  $('kBalance').textContent = 'Bal: Rs. ' + fmt(bal);
+  $('kBalance').textContent = 'Rs. ' + fmt(bal);
+  $('kIssSub').textContent = `${iss} critical issues`;
+
+  // Update navbar badge if open issues exist
+  const badge = $('navIssuesBadge');
+  if (iss > 0) {
+    badge.textContent = iss;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+/* -------------------------------------------------------------
+ * VIEW 2: RENDER REPORTS & ANALYTICS
+ * ----------------------------------------------------------- */
+function renderReports() {
+  let sum = 0, paid = 0, vo = 0, psum = 0, cont = 0, adv = 0, ipcSum = 0;
+  const engStats = {};
+  const voNatureStats = { 'Work': { count: 0, sum: 0 }, 'Omission': { count: 0, sum: 0 }, 'SSR': { count: 0, sum: 0 }, 'Addl. Work': { count: 0, sum: 0 } };
+  const issuesList = [];
+
+  contracts.forEach(c => {
+    const t = totalsOf(c);
+    sum += t.sum;
+    paid += t.paid;
+    vo += t.vo;
+    psum += num(c.pSum);
+    cont += num(c.contingencies);
+    adv += num(c.advancePayment);
+    ipcSum += t.ipc;
+
+    const eng = c.engineer || 'Unassigned';
+    if (!engStats[eng]) engStats[eng] = { count: 0, sum: 0, paid: 0, issues: 0 };
+    engStats[eng].count++;
+    engStats[eng].sum += t.revisedSum;
+    engStats[eng].paid += t.paid;
+    if (c.issues && c.issues.trim()) engStats[eng].issues++;
+
+    (c.variations || []).forEach(v => {
+      const nat = v.voNature || 'Work';
+      if (!voNatureStats[nat]) voNatureStats[nat] = { count: 0, sum: 0 };
+      voNatureStats[nat].count++;
+      voNatureStats[nat].sum += num(v.voAmount);
+    });
+
+    if (c.issues && c.issues.trim()) {
+      issuesList.push({
+        contractNo: c.contractNo,
+        engineer: c.engineer,
+        text: c.issues.trim(),
+        revisedSum: t.revisedSum,
+        paid: t.paid,
+        balance: t.balance
+      });
+    }
+  });
+
+  const revised = sum + vo;
+  const balance = revised - paid;
+  const pct = revised > 0 ? (paid / revised) * 100 : 0;
+
+  // 1. Progress Gauge
+  $('repPctDisbursed').textContent = `${pct.toFixed(1)}%`;
+  $('repSumDisbursed').textContent = 'Rs. ' + fmt(paid);
+  $('repSumRevised').textContent = 'Rs. ' + fmt(revised);
+  $('repSumBalance').textContent = 'Rs. ' + fmt(balance);
+  const clampedPct = Math.min(Math.max(pct, 0), 100);
+  $('svgProgressCircle').setAttribute('stroke-dasharray', `${clampedPct}, 100`);
+
+  // 2. Engineer Table
+  const engTb = $('repEngTbody');
+  engTb.innerHTML = '';
+  Object.keys(engStats).forEach(eng => {
+    const s = engStats[eng];
+    const engPct = s.sum > 0 ? (s.paid / s.sum) * 100 : 0;
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50/70';
+    tr.innerHTML = `
+      <td class="py-2.5 px-3 font-semibold text-slate-800 flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        ${esc(eng)}
+      </td>
+      <td class="py-2.5 px-3 text-center font-mono">${s.count}</td>
+      <td class="py-2.5 px-3 text-right font-mono">${fmt(s.sum)}</td>
+      <td class="py-2.5 px-3 text-right font-mono text-emerald-700">${fmt(s.paid)}</td>
+      <td class="py-2.5 px-3 text-center">
+        <span class="px-2 py-0.5 rounded-full font-mono text-[10px] ${engPct > 100 ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'}">
+          ${engPct.toFixed(1)}%
+        </span>
+      </td>
+      <td class="py-2.5 px-3 text-center">
+        ${s.issues > 0 ? `<span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold border border-rose-200 text-[10px]">${s.issues} open</span>` : '<span class="text-slate-400">0</span>'}
+      </td>
+    `;
+    engTb.appendChild(tr);
+  });
+
+  if (!Object.keys(engStats).length) {
+    engTb.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">No contract records available to compute engineer workload.</td></tr>';
+  }
+
+  // 3. Variations Breakdown Cards
+  const voContainer = $('repVoContainer');
+  voContainer.innerHTML = '';
+  let totalVoCount = 0;
+  Object.entries(voNatureStats).forEach(([nat, data]) => {
+    totalVoCount += data.count;
+    const isNeg = data.sum < 0;
+    const div = document.createElement('div');
+    div.className = 'flex items-center justify-between p-2.5 bg-slate-50/70 border border-slate-200 rounded-lg text-xs';
+    div.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full ${nat === 'Omission' ? 'bg-rose-500' : nat === 'Addl. Work' ? 'bg-emerald-500' : nat === 'SSR' ? 'bg-indigo-500' : 'bg-amber-500'}"></span>
+        <b class="text-slate-800">${esc(nat)}</b>
+        <span class="text-slate-400 text-[10px]">(${data.count} items)</span>
+      </div>
+      <span class="font-mono font-bold ${isNeg ? 'text-rose-600' : 'text-slate-800'}">
+        ${(data.sum >= 0 ? '+' : '') + fmt(data.sum)}
+      </span>
+    `;
+    voContainer.appendChild(div);
+  });
+  $('repVoBadge').textContent = `${totalVoCount} Variation Items`;
+
+  // 4. Contingencies & Cashflow Cards
+  $('repTotalPs').textContent = 'Rs. ' + fmt(psum);
+  $('repTotalCont').textContent = 'Rs. ' + fmt(cont);
+  $('repTotalAdv').textContent = 'Rs. ' + fmt(adv);
+  $('repTotalIpcSum').textContent = 'Rs. ' + fmt(ipcSum);
+  $('repNetDisbursed').textContent = 'Rs. ' + fmt(paid);
+
+  // 5. Issues Logbook
+  const issContainer = $('repIssuesList');
+  issContainer.innerHTML = '';
+  $('repIssuesBadge').textContent = `${issuesList.length} Active Observations`;
+
+  if (issuesList.length === 0) {
+    issContainer.innerHTML = `
+      <div class="p-6 text-center text-slate-400 bg-emerald-50/30 border border-emerald-200/60 rounded-xl">
+        <svg class="w-6 h-6 mx-auto text-emerald-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <p class="font-medium text-emerald-900">All contracts in healthy standing</p>
+        <p class="text-[11px] text-emerald-700">No unresolved engineering disputes or pending actions flagged across any projects.</p>
+      </div>
+    `;
+  } else {
+    issuesList.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'p-3 bg-rose-50/50 border border-rose-200/80 rounded-xl flex flex-col sm:flex-row justify-between gap-3 text-xs';
+      row.innerHTML = `
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <b class="font-mono text-slate-900">${esc(item.contractNo)}</b>
+            <span class="text-slate-400">•</span>
+            <span class="text-slate-600 font-medium">${esc(item.engineer)}</span>
+          </div>
+          <p class="text-rose-950 font-normal leading-relaxed">${esc(item.text)}</p>
+        </div>
+        <div class="text-right shrink-0 font-mono text-[11px] sm:self-center">
+          <div class="text-slate-500">Rev. Value: <span class="font-semibold text-slate-800">${fmt(item.revisedSum)}</span></div>
+          <div class="text-slate-500">Disbursed: <span class="font-semibold text-blue-800">${fmt(item.paid)}</span></div>
+        </div>
+      `;
+      issContainer.appendChild(row);
+    });
+  }
+}
+/* -------------------------------------------------------------
+ * CONTRACT 360° INSPECTOR
+ * ----------------------------------------------------------- */
+function inspectContract(idx) {
+  const c = contracts[idx];
+  if (!c) return;
+  const t = totalsOf(c);
+
+  $('detContractNo').textContent = c.contractNo;
+  $('detEngineer').textContent = `Supervising Engineer: ${c.engineer || 'Unassigned'}`;
+  $('detDesc').textContent = c.description || 'No description provided';
+  $('detOrigSum').textContent = 'Rs. ' + fmt(c.contractSum);
+  $('detVoSum').textContent = (t.vo >= 0 ? '+' : '') + fmt(t.vo);
+  $('detRevSum').textContent = 'Rs. ' + fmt(t.revisedSum);
+  $('detDisbursed').textContent = 'Rs. ' + fmt(t.paid);
+
+  // IPCs list
+  const ipcDiv = $('detIpcList');
+  ipcDiv.innerHTML = '';
+  if ((c.ipcs || []).length) {
+    c.ipcs.forEach(i => {
+      const row = document.createElement('div');
+      row.className = 'flex justify-between items-center text-xs py-1 border-b border-blue-100 last:border-b-0';
+      row.innerHTML = `
+        <span><b class="font-mono text-blue-900">${esc(i.ipcNo)}</b> ${i.ipcRemarks ? `<span class="text-slate-500 text-[10px]">(${esc(i.ipcRemarks)})</span>` : ''}</span>
+        <span class="font-mono font-bold text-slate-800">Rs. ${fmt(i.ipcAmount)}</span>
+      `;
+      ipcDiv.appendChild(row);
+    });
+  } else {
+    ipcDiv.innerHTML = '<span class="text-slate-400 italic">No IPC certificates issued yet.</span>';
+  }
+
+  // Variations list
+  const voDiv = $('detVoList');
+  voDiv.innerHTML = '';
+  if ((c.variations || []).length) {
+    c.variations.forEach(v => {
+      const row = document.createElement('div');
+      row.className = 'flex justify-between items-center text-xs py-1 border-b border-amber-100 last:border-b-0';
+      row.innerHTML = `
+        <div>
+          <b class="font-mono text-slate-800">${esc(v.voNo)}</b>
+          <span class="px-1 py-0.2 rounded text-[9px] font-semibold bg-amber-100 text-amber-900 ml-1">${esc(v.voNature)}</span>
+          ${v.voDesc ? `<div class="text-[10px] text-slate-500">${esc(v.voDesc)}</div>` : ''}
+        </div>
+        <span class="font-mono font-bold ${num(v.voAmount) < 0 ? 'text-rose-600' : 'text-slate-800'}">Rs. ${fmt(v.voAmount)}</span>
+      `;
+      voDiv.appendChild(row);
+    });
+  } else {
+    voDiv.innerHTML = '<span class="text-slate-400 italic">No variation orders recorded.</span>';
+  }
+
+  // Issues Section
+  if (c.issues && c.issues.trim()) {
+    $('detIssuesSection').classList.remove('hidden');
+    $('detIssuesText').textContent = c.issues;
+  } else {
+    $('detIssuesSection').classList.add('hidden');
+  }
+
+  $('detEditBtn').onclick = () => {
+    hide('viewDetailModal');
+    openModal(idx);
+  };
+
+  show('viewDetailModal');
 }
 
 /* -------------------------------------------------------------
@@ -1039,7 +1650,6 @@ function askDelete(idx) {
   };
   show('delModal');
 }
-
 /* -------------------------------------------------------------
  * SETTINGS & DATA EXPORT/IMPORT
  * ----------------------------------------------------------- */
@@ -1129,16 +1739,53 @@ function exportCSV() {
   toast('CSV Ledger exported');
 }
 
+function exportComprehensiveReportCSV() {
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [
+    ['CEDE EXECUTIVE FINANCIAL & CONTRACT AUDIT REPORT'],
+    ['Generated on', new Date().toLocaleString()],
+    [],
+    ['Contract No', 'Engineer', 'Original Sum', 'VO Net Delta', 'Revised Sum', 'Advance', 'IPC Certified', 'Total Disbursed', 'Remaining Balance', '% Paid', 'Issues / Remarks']
+  ];
+
+  contracts.forEach(c => {
+    const t = totalsOf(c);
+    rows.push([
+      q(c.contractNo),
+      q(c.engineer),
+      c.contractSum,
+      t.vo,
+      t.revisedSum,
+      c.advancePayment || 0,
+      t.ipc,
+      t.paid,
+      t.balance,
+      `${t.pct.toFixed(1)}%`,
+      q(c.issues || 'Clear')
+    ]);
+  });
+
+  const csvContent = '\uFEFF' + rows.map(r => r.join(',')).join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CEDE_Executive_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Comprehensive Report CSV downloaded');
+}
+
 function exportJSON() {
   const data = {
-    app: 'CEDE Budget Tracker Pro',
+    app: 'CEDE Budget Tracker Pro Enterprise',
     exportedAt: new Date().toISOString(),
+    engineers,
     contracts
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `CEDE_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `CEDE_Enterprise_Backup_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   toast('Backup JSON downloaded');
@@ -1154,6 +1801,11 @@ function importJSON(e) {
       const incoming = Array.isArray(parsed) ? parsed : parsed.contracts;
       if (!Array.isArray(incoming)) throw new Error('Unrecognized backup JSON schema');
       contracts = incoming;
+      if (parsed.engineers && Array.isArray(parsed.engineers)) {
+        engineers = parsed.engineers;
+        ls.set('cede_engineers', JSON.stringify(engineers));
+        populateEngineersDropdowns();
+      }
       markDirty();
       closeSettings();
       toast(`Successfully restored ${contracts.length} contracts`);
@@ -1200,6 +1852,22 @@ function loadSampleData() {
       variations: [
         { voNo: "VO-01", voNature: "SSR", voAmount: 920000, voDesc: "Concrete retaining wall extension at chainage 0+240" }
       ],
+      issues: "Delayed asphalt supply due to monsoon rain disruptions."
+    },
+    {
+      contractNo: "CEDE/2026/FAC-08",
+      engineer: "Eng. Jayasuriya",
+      description: "HVAC and Renewable Solar Micro-Grid Power Integration",
+      contractSum: 31200000,
+      pSum: 1500000,
+      contingencies: 950000,
+      advancePayment: 6240000,
+      ipcs: [
+        { ipcNo: "IPC-01", ipcAmount: 12500000, ipcRemarks: "Inverter banks and rooftop solar frames" }
+      ],
+      variations: [
+        { voNo: "VO-01", voNature: "Addl. Work", voAmount: 780000, voDesc: "Battery storage room fire rating upgrade" }
+      ],
       issues: ""
     }
   ];
@@ -1215,12 +1883,18 @@ status(url ? 'Connecting...' : 'Local only', url ? 'amber' : 'gray');
 render();
 if (url) pull(true);
 
+// Set printed date stamp
+try {
+  $('printReportDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+} catch(e) {}
+
 // Keyboard Esc to close modals
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeModal();
     closeSettings();
     hide('delModal');
+    hide('viewDetailModal');
   }
 });
 </script>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CEDE Budget & Payment Tracker Pro - Enterprise Edition</title>
+  <title>CEBE Budget Management System - NWSDB, RSC (Uva)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -102,15 +102,16 @@
   <div class="max-w-[1850px] mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
     <!-- Brand identity -->
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 text-white flex items-center justify-center font-bold text-lg shadow-glow-blue">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600 via-blue-700 to-indigo-900 text-white flex items-center justify-center font-bold text-lg shadow-glow-blue">
+        <!-- NWSDB Water Drop / Supply Icon -->
+        <svg class="w-5 h-5 text-cyan-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 14a4 4 0 008 0"/></svg>
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">CEDE Budget & Payment Tracker</h1>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200">v3.0 Enterprise</span>
+          <h1 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">CEBE Budget Management System</h1>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-cyan-50 to-blue-50 text-blue-800 border border-blue-200">NWSDB • RSC (Uva)</span>
         </div>
-        <p class="text-[11px] text-slate-500 font-medium">Civil Engineering Contract Ledger • IPC Certifications • VO Analytics</p>
+        <p class="text-[11px] text-slate-500 font-medium">National Water Supply & Drainage Board • Regional Support Centre (Uva) • Contracts, IPCs & Variations</p>
       </div>
     </div>
 
@@ -166,15 +167,20 @@
 <main class="max-w-[1850px] mx-auto px-4 sm:px-6 py-4 flex-1 w-full space-y-4">
   
   <!-- Printable Letterhead Header (Appears only on printed documents) -->
-  <div class="print-only border-b-2 border-slate-800 pb-3 mb-4">
+  <div class="print-only border-b-2 border-blue-900 pb-3 mb-4">
     <div class="flex justify-between items-start">
       <div>
-        <h1 class="text-xl font-bold uppercase tracking-tight text-slate-900">Center for Engineering Design & Education (CEDE)</h1>
-        <p class="text-xs text-slate-600">Financial Ledger, Interim Payment Certifications & Contract Audit</p>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold px-1.5 py-0.5 bg-blue-900 text-white rounded">NWSDB</span>
+          <h1 class="text-lg font-bold uppercase tracking-tight text-slate-900">National Water Supply & Drainage Board</h1>
+        </div>
+        <p class="text-xs font-semibold text-blue-900 mt-0.5">Regional Support Centre (Uva) • CEBE Budget Management System</p>
+        <p class="text-[11px] text-slate-600">Office of the Chief Engineer (CEBE) • Capital Works, Interim Payment Certifications (IPC) & Variation Audit</p>
       </div>
       <div class="text-right text-[10px] text-slate-600">
         <p>Report Date: <b class="font-mono text-slate-900" id="printReportDate">October 1, 2026</b></p>
         <p>Currency: Sri Lankan Rupees (LKR / Rs.)</p>
+        <p class="text-blue-800 font-medium">Regional Centre: RSC (Uva)</p>
       </div>
     </div>
   </div>
@@ -271,12 +277,12 @@
           <span class="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-slate-400">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </span>
-          <input id="q" oninput="render()" placeholder="Search contract #, engineer, scope, IPCs, VOs, or issues..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs transition">
+          <input id="q" oninput="render()" placeholder="Search contract #, project engineer, scheme, IPCs, VOs, or issues..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 text-xs transition">
         </div>
 
         <!-- Filter Engineer -->
         <select id="fEng" onchange="render()" class="px-2.5 py-1.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 font-medium cursor-pointer">
-          <option value="">All Engineers</option>
+          <option value="">All Engineers / PEs</option>
         </select>
 
         <!-- Filter VO Nature -->
@@ -351,19 +357,19 @@
     </div>
 
     <!-- Empty state hint box -->
-    <div id="emptyHint" class="hidden bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 no-print shadow-subtle">
+    <div id="emptyHint" class="hidden bg-gradient-to-r from-blue-50 via-cyan-50 to-blue-50 border border-blue-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 no-print shadow-subtle">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-          i
+        <div class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          💧
         </div>
         <div>
-          <h4 class="font-bold text-blue-950 text-sm">No engineering contracts loaded yet!</h4>
-          <p class="text-blue-800 text-[11px] mt-0.5">Start by recording your first infrastructure contract, or load standard sample contracts to explore interactive reports and analytics.</p>
+          <h4 class="font-bold text-blue-950 text-sm">No NWSDB Uva contracts loaded yet!</h4>
+          <p class="text-blue-800 text-[11px] mt-0.5">Start by recording your first water supply/sanitation contract, or load sample Uva Province schemes (Badulla, Bandarawela, Monaragala) to explore the system.</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="loadSampleData()" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white font-medium rounded-lg shadow-sm transition active:scale-95">
-          Load Sample Dataset
+          Load Uva Water Schemes
         </button>
       </div>
     </div>
@@ -535,22 +541,22 @@
       <div class="grid grid-cols-3 gap-8 text-center text-xs">
         <div>
           <div class="border-b border-slate-400 pb-12 mb-2"></div>
-          <p class="font-bold text-slate-800">Supervising Engineer</p>
-          <p class="text-[10px] text-slate-500">Center for Engineering Design & Education</p>
+          <p class="font-bold text-slate-800">Project Engineer / Supervising Engineer</p>
+          <p class="text-[10px] text-slate-500">NWSDB - Regional Support Centre (Uva)</p>
         </div>
         <div>
           <div class="border-b border-slate-400 pb-12 mb-2"></div>
-          <p class="font-bold text-slate-800">Senior Quantity Surveyor / Project Director</p>
-          <p class="text-[10px] text-slate-500">CEDE Infrastructure Audit Unit</p>
+          <p class="font-bold text-slate-800">Chief Engineer (CEBE)</p>
+          <p class="text-[10px] text-slate-500">Regional Support Centre (Uva)</p>
         </div>
         <div>
           <div class="border-b border-slate-400 pb-12 mb-2"></div>
-          <p class="font-bold text-slate-800">Director / Head of Department</p>
-          <p class="text-[10px] text-slate-500">Certified for Executive Review</p>
+          <p class="font-bold text-slate-800">Deputy General Manager - RSC (Uva)</p>
+          <p class="text-[10px] text-slate-500">National Water Supply & Drainage Board</p>
         </div>
       </div>
       <div class="mt-4 text-center text-[9px] text-slate-400">
-        Confidential engineering & budget document generated via CEDE Ledger System • All figures in LKR unless specified.
+        Confidential water infrastructure budget and billing document generated via NWSDB RSC (Uva) CEBE Management System • All amounts in Sri Lankan Rupees (LKR).
       </div>
     </div>
   </div>
@@ -577,21 +583,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200">
           <label class="block">
             <span class="font-medium text-slate-700">Contract No *</span>
-            <input id="fNo" required placeholder="e.g. CEDE/WR/2026/04" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white font-mono text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
+            <input id="fNo" required placeholder="e.g. NWSDB/RSC(UVA)/BD/2026/04" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white font-mono text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
           </label>
           <label class="block">
-            <span class="font-medium text-slate-700">Supervising Engineer *</span>
+            <span class="font-medium text-slate-700">Supervising / Project Engineer *</span>
             <select id="fEngIn" required class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
               <!-- Dynamically populated from settings -->
             </select>
           </label>
           <label class="block">
-            <span class="font-medium text-slate-700">Original Contract Sum (Rs) *</span>
+            <span class="font-medium text-slate-700">Original Contract Sum (LKR) *</span>
             <input id="fSum" type="number" step="0.01" min="0" required oninput="totals()" placeholder="0.00" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white font-mono text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
           </label>
           <label class="sm:col-span-3 block">
-            <span class="font-medium text-slate-700">Contract Scope / Description *</span>
-            <input id="fDesc" required placeholder="e.g. Construction of 3-Storey Laboratory Wing & Auxiliary Drainage" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
+            <span class="font-medium text-slate-700">Water Scheme Scope / Description *</span>
+            <input id="fDesc" required placeholder="e.g. Construction of 1000m³ RCC Ground Reservoir & Transmission Main at Badulla" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
           </label>
           <label class="block">
             <span class="font-medium text-slate-700">Provisional Sum (P. Sum)</span>
@@ -602,7 +608,7 @@
             <input id="fCont" type="number" step="0.01" min="0" placeholder="0.00" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white font-mono text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
           </label>
           <label class="block">
-            <span class="font-medium text-slate-700">Advance Payment Paid (Rs)</span>
+            <span class="font-medium text-slate-700">Advance Payment Paid (LKR)</span>
             <input id="fAdv" type="number" step="0.01" min="0" oninput="totals()" placeholder="0.00" class="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg bg-white font-mono text-xs focus:ring-1 focus:ring-blue-600 focus:outline-none">
           </label>
         </div>
@@ -838,15 +844,20 @@ const ls = {
   set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }
 };
 
-let url = BAKED.startsWith('http') ? BAKED : (ls.get('cede_url') || FALLBACK_URL);
-let engineers = ['Eng. Rasika', 'Eng. Oshani', 'Eng. Jayasuriya'];
+let url = BAKED.startsWith('http') ? BAKED : (ls.get('nwsdb_cebe_url') || ls.get('nwsdb_uva_url') || ls.get('cede_url') || FALLBACK_URL);
+let engineers = [
+  'Eng. D.M. Rasika (PE - Badulla)',
+  'Eng. K. Oshani (PE - Monaragala)',
+  'Eng. T. Jayasuriya (PE - Bandarawela)',
+  'Eng. S. Bandara (CEBE - Planning & Contracts)'
+];
 try {
-  const storedEng = JSON.parse(ls.get('cede_engineers') || '[]');
+  const storedEng = JSON.parse(ls.get('nwsdb_cebe_engineers') || ls.get('nwsdb_uva_engineers') || ls.get('cede_engineers') || '[]');
   if (Array.isArray(storedEng) && storedEng.length) engineers = storedEng;
 } catch (e) {}
 
 let contracts = [];
-try { contracts = JSON.parse(ls.get('cede_data') || '[]'); } catch (e) {}
+try { contracts = JSON.parse(ls.get('nwsdb_cebe_data') || ls.get('nwsdb_uva_data') || ls.get('cede_data') || '[]'); } catch (e) {}
 let dirty = false, busy = false, modalOpen = false, editIdx = -1, lastHash = '';
 let currentView = 'ledger'; // 'ledger' | 'reports'
 
@@ -875,7 +886,8 @@ function status(text, color) {
 }
 
 function saveLocal() {
-  ls.set('cede_data', JSON.stringify(contracts));
+  ls.set('nwsdb_cebe_data', JSON.stringify(contracts));
+  ls.set('nwsdb_uva_data', JSON.stringify(contracts)); // Mirror backup
 }
 
 function switchView(viewName) {
@@ -1665,12 +1677,14 @@ function closeSettings() {
 
 function saveSettings() {
   url = $('urlIn').value.trim();
-  ls.set('cede_url', url);
+  ls.set('nwsdb_cebe_url', url);
+  ls.set('nwsdb_uva_url', url);
 
   const rawEng = $('engListIn').value.split(',').map(s => s.trim()).filter(Boolean);
   if (rawEng.length) {
     engineers = rawEng;
-    ls.set('cede_engineers', JSON.stringify(engineers));
+    ls.set('nwsdb_cebe_engineers', JSON.stringify(engineers));
+    ls.set('nwsdb_uva_engineers', JSON.stringify(engineers));
     populateEngineersDropdowns();
   }
 
@@ -1733,19 +1747,20 @@ function exportCSV() {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `CEDE_Budget_Ledger_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `NWSDB_RSC_UVA_CEBE_Ledger_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('CSV Ledger exported');
+  toast('NWSDB CEBE - RSC (Uva) CSV Ledger exported');
 }
 
 function exportComprehensiveReportCSV() {
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
   const rows = [
-    ['CEDE EXECUTIVE FINANCIAL & CONTRACT AUDIT REPORT'],
+    ['NATIONAL WATER SUPPLY & DRAINAGE BOARD (NWSDB) - RSC (UVA)'],
+    ['OFFICE OF THE CHIEF ENGINEER (CEBE) - CAPITAL BUDGET & PAYMENT AUDIT REPORT'],
     ['Generated on', new Date().toLocaleString()],
     [],
-    ['Contract No', 'Engineer', 'Original Sum', 'VO Net Delta', 'Revised Sum', 'Advance', 'IPC Certified', 'Total Disbursed', 'Remaining Balance', '% Paid', 'Issues / Remarks']
+    ['Contract No', 'Project Engineer', 'Original Sum', 'VO Net Delta', 'Revised Sum', 'Advance', 'IPC Certified', 'Total Disbursed', 'Remaining Balance', '% Paid', 'Issues / Remarks']
   ];
 
   contracts.forEach(c => {
@@ -1769,15 +1784,17 @@ function exportComprehensiveReportCSV() {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `CEDE_Executive_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `NWSDB_RSC_UVA_CEBE_Executive_Report_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('Comprehensive Report CSV downloaded');
+  toast('NWSDB CEBE Executive Report CSV downloaded');
 }
 
 function exportJSON() {
   const data = {
-    app: 'CEDE Budget Tracker Pro Enterprise',
+    app: 'CEBE Budget Management System - NWSDB, RSC (Uva)',
+    regionalCentre: 'Regional Support Centre (Uva) - Bandarawela',
+    office: 'Office of the Chief Engineer (CEBE)',
     exportedAt: new Date().toISOString(),
     engineers,
     contracts
@@ -1785,10 +1802,69 @@ function exportJSON() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `CEDE_Enterprise_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `NWSDB_RSC_UVA_CEBE_Backup_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
-  toast('Backup JSON downloaded');
+  toast('NWSDB CEBE Backup JSON downloaded');
+}
+
+function loadSampleData() {
+  contracts = [
+    {
+      contractNo: "NWSDB/RSC(UVA)/CEBE/BD/2026/01",
+      engineer: "Eng. D.M. Rasika (PE - Badulla)",
+      description: "Augmentation of Badulla-Halpe Water Treatment Plant (15 MLD) & Transmission Main",
+      contractSum: 58500000,
+      pSum: 3200000,
+      contingencies: 2000000,
+      advancePayment: 11700000,
+      ipcs: [
+        { ipcNo: "IPC-01", ipcAmount: 9800000, ipcRemarks: "Intake well dewatering and clarifier foundation" },
+        { ipcNo: "IPC-02", ipcAmount: 14500000, ipcRemarks: "Rapid gravity filter structures and pump house RCC" },
+        { ipcNo: "IPC-03", ipcAmount: 11200000, ipcRemarks: "DI pipe laying 350mm dia for 4.2 km" }
+      ],
+      variations: [
+        { voNo: "VO-01", voNature: "Addl. Work", voAmount: 2450000, voDesc: "Rock blasting and culvert crossings along Badulla-Passara road" },
+        { voNo: "VO-02", voNature: "Omission", voAmount: -680000, voDesc: "Omission of perimeter brick wall in favor of security chain link" }
+      ],
+      issues: "Awaiting RDA road opening clearance for pipeline section from Ch 3+200 to Ch 4+100."
+    },
+    {
+      contractNo: "NWSDB/RSC(UVA)/CEBE/MON/2026/04",
+      engineer: "Eng. K. Oshani (PE - Monaragala)",
+      description: "Construction of 1,000m³ RCC Ground Reservoir & Distribution Network at Wellawaya",
+      contractSum: 28400000,
+      pSum: 1200000,
+      contingencies: 950000,
+      advancePayment: 5680000,
+      ipcs: [
+        { ipcNo: "IPC-01", ipcAmount: 7800000, ipcRemarks: "Reservoir floor slab, booster station foundation" },
+        { ipcNo: "IPC-02", ipcAmount: 10600000, ipcRemarks: "Circular wall concreting and hydrostatic leak test" }
+      ],
+      variations: [
+        { voNo: "VO-01", voNature: "SSR", voAmount: 1150000, voDesc: "HDPE pipe pressure rating upgrade from PN10 to PN16 on high head line" }
+      ],
+      issues: "Delayed transformer installation by CEB for the high lift booster station."
+    },
+    {
+      contractNo: "NWSDB/RSC(UVA)/CEBE/BW/2026/07",
+      engineer: "Eng. T. Jayasuriya (PE - Bandarawela)",
+      description: "Rehabilitation of Bandarawela Urban Intake, Desilting Basin & Clear Water Transmission",
+      contractSum: 36200000,
+      pSum: 1800000,
+      contingencies: 1100000,
+      advancePayment: 7240000,
+      ipcs: [
+        { ipcNo: "IPC-01", ipcAmount: 13800000, ipcRemarks: "Weir rehabilitation and desilting tank sluice gates replacement" }
+      ],
+      variations: [
+        { voNo: "VO-01", voNature: "Addl. Work", voAmount: 890000, voDesc: "Gabion wall protection along stream bank against flash floods" }
+      ],
+      issues: ""
+    }
+  ];
+  markDirty();
+  toast('NWSDB CEBE - RSC (Uva) sample water schemes loaded');
 }
 
 function importJSON(e) {
@@ -1803,7 +1879,8 @@ function importJSON(e) {
       contracts = incoming;
       if (parsed.engineers && Array.isArray(parsed.engineers)) {
         engineers = parsed.engineers;
-        ls.set('cede_engineers', JSON.stringify(engineers));
+        ls.set('nwsdb_cebe_engineers', JSON.stringify(engineers));
+        ls.set('nwsdb_uva_engineers', JSON.stringify(engineers));
         populateEngineersDropdowns();
       }
       markDirty();
@@ -1814,65 +1891,6 @@ function importJSON(e) {
     }
   };
   reader.readAsText(file);
-}
-
-function loadSampleData() {
-  contracts = [
-    {
-      contractNo: "CEDE/2026/CIV-01",
-      engineer: "Eng. Rasika",
-      description: "Construction of Multi-Disciplinary Engineering Research Complex",
-      contractSum: 48500000,
-      pSum: 2500000,
-      contingencies: 1500000,
-      advancePayment: 9700000,
-      ipcs: [
-        { ipcNo: "IPC-01", ipcAmount: 8200000, ipcRemarks: "Substructure completed" },
-        { ipcNo: "IPC-02", ipcAmount: 11400000, ipcRemarks: "RCC Frame up to 2nd Floor" },
-        { ipcNo: "IPC-03", ipcAmount: 9600000, ipcRemarks: "Roof slab and external masonry" }
-      ],
-      variations: [
-        { voNo: "VO-01", voNature: "Addl. Work", voAmount: 1850000, voDesc: "Deep foundation piles due to low strata" },
-        { voNo: "VO-02", voNature: "Omission", voAmount: -450000, voDesc: "Aluminum cladding reduction" }
-      ],
-      issues: "Awaiting final testing certificates for fire suppression pipework."
-    },
-    {
-      contractNo: "CEDE/2026/RDS-04",
-      engineer: "Eng. Oshani",
-      description: "Internal Access Road Rehabilitation and Stormwater Drain Network",
-      contractSum: 22000000,
-      pSum: 1000000,
-      contingencies: 800000,
-      advancePayment: 4400000,
-      ipcs: [
-        { ipcNo: "IPC-01", ipcAmount: 6500000, ipcRemarks: "Culvert works and subbase" },
-        { ipcNo: "IPC-02", ipcAmount: 8900000, ipcRemarks: "Asphalt binder course" }
-      ],
-      variations: [
-        { voNo: "VO-01", voNature: "SSR", voAmount: 920000, voDesc: "Concrete retaining wall extension at chainage 0+240" }
-      ],
-      issues: "Delayed asphalt supply due to monsoon rain disruptions."
-    },
-    {
-      contractNo: "CEDE/2026/FAC-08",
-      engineer: "Eng. Jayasuriya",
-      description: "HVAC and Renewable Solar Micro-Grid Power Integration",
-      contractSum: 31200000,
-      pSum: 1500000,
-      contingencies: 950000,
-      advancePayment: 6240000,
-      ipcs: [
-        { ipcNo: "IPC-01", ipcAmount: 12500000, ipcRemarks: "Inverter banks and rooftop solar frames" }
-      ],
-      variations: [
-        { voNo: "VO-01", voNature: "Addl. Work", voAmount: 780000, voDesc: "Battery storage room fire rating upgrade" }
-      ],
-      issues: ""
-    }
-  ];
-  markDirty();
-  toast('Sample engineering dataset loaded');
 }
 
 /* -------------------------------------------------------------
